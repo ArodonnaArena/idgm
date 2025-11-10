@@ -1,0 +1,373 @@
+# MongoDB Migration Guide
+
+## Overview
+This guide will help you migrate from MySQL to MongoDB for both local development and MongoDB Atlas (cloud).
+
+## Prerequisites
+- Node.js 18+ installed
+- MongoDB installed locally OR MongoDB Atlas account
+
+---
+
+## Part 1: Local MongoDB Setup
+
+### Step 1: Install MongoDB Locally
+
+#### Windows
+1. Download MongoDB Community Server from: https://www.mongodb.com/try/download/community
+2. Run the installer (.msi file)
+3. Choose "Complete" installation
+4. Install MongoDB as a service (check the box)
+5. Install MongoDB Compass (GUI tool) when prompted
+
+#### Verify Installation
+```powershell
+# Check if MongoDB is running
+mongod --version
+```
+
+### Step 2: Start MongoDB
+
+MongoDB should start automatically as a Windows service. If not:
+
+```powershell
+# Start MongoDB service
+net start MongoDB
+
+# Or run manually
+mongod --dbpath="C:\data\db"
+```
+
+### Step 3: Update Environment Variables
+
+```bash
+# Edit your .env file
+DATABASE_URL="mongodb://localhost:27017/idgm_db"
+```
+
+### Step 4: Install Dependencies & Setup Database
+
+```bash
+# Generate Prisma client for MongoDB
+npm run db:gen
+
+# Push schema to MongoDB (creates collections)
+npm run db:push
+
+# Seed database with initial data
+npm run db:seed
+```
+
+---
+
+## Part 2: MongoDB Atlas Setup (Cloud)
+
+### Step 1: Create MongoDB Atlas Account
+
+1. Go to https://www.mongodb.com/cloud/atlas
+2. Sign up for a free account
+3. Verify your email
+
+### Step 2: Create a Cluster
+
+1. Click "Build a Database"
+2. Choose **FREE** tier (M0 Sandbox)
+3. Select a cloud provider (AWS recommended)
+4. Choose a region close to Nigeria (e.g., Frankfurt, London, or Cape Town)
+5. Name your cluster (e.g., "idgm-cluster")
+6. Click "Create"
+
+Wait 3-5 minutes for the cluster to provision.
+
+### Step 3: Create Database User
+
+1. Click "Database Access" in the left sidebar
+2. Click "Add New Database User"
+3. Choose "Password" authentication
+4. Username: `idgm_admin`
+5. Password: Generate a strong password (save it securely!)
+6. Database User Privileges: Select "Read and write to any database"
+7. Click "Add User"
+
+### Step 4: Configure Network Access
+
+1. Click "Network Access" in the left sidebar
+2. Click "Add IP Address"
+3. For development: Click "Allow Access from Anywhere" (0.0.0.0/0)
+   - **Warning**: For production, whitelist specific IPs only
+4. Click "Confirm"
+
+### Step 5: Get Connection String
+
+1. Click "Database" in the left sidebar
+2. Click "Connect" on your cluster
+3. Choose "Connect your application"
+4. Select "Driver: Node.js" and "Version: 5.5 or later"
+5. Copy the connection string
+
+It will look like:
+```
+mongodb+srv://idgm_admin:<password>@idgm-cluster.xxxxx.mongodb.net/?retryWrites=true&w=majority
+```
+
+### Step 6: Update Environment Variables
+
+```bash
+# Replace <password> with your actual password
+# Add /idgm_db before the query parameters
+DATABASE_URL="mongodb+srv://idgm_admin:YOUR_PASSWORD@idgm-cluster.xxxxx.mongodb.net/idgm_db?retryWrites=true&w=majority"
+```
+
+### Step 7: Push Schema to Atlas
+
+```bash
+# Generate Prisma client
+npm run db:gen
+
+# Push schema to MongoDB Atlas
+npm run db:push
+
+# Seed database
+npm run db:seed
+```
+
+---
+
+## Part 3: Data Migration from MySQL
+
+### Option A: Fresh Start (Recommended)
+
+Simply seed the database with initial data:
+
+```bash
+npm run db:seed
+```
+
+This will create:
+- All role definitions (ADMIN, STAFF, CUSTOMER, LANDLORD, TENANT)
+- Product categories (Agriculture, Kitchenware, etc.)
+- Sample products with images
+- Admin user (email: admin@idgm.com, password: admin123)
+
+### Option B: Migrate Existing Data
+
+If you have existing MySQL data to migrate, use our migration script:
+
+```bash
+# This will read MySQL data and import to MongoDB
+node scripts/migrate-mysql-to-mongo.js
+```
+
+---
+
+## Part 4: Testing the Migration
+
+### 1. Verify Collections
+
+Using MongoDB Compass (GUI):
+1. Open MongoDB Compass
+2. Connect to `mongodb://localhost:27017` (or your Atlas connection string)
+3. Navigate to `idgm_db` database
+4. You should see collections: User, Role, Product, Category, etc.
+
+Using CLI:
+```bash
+# Connect to MongoDB
+mongosh mongodb://localhost:27017/idgm_db
+
+# List collections
+show collections
+
+# Count documents in a collection
+db.User.countDocuments()
+db.Product.countDocuments()
+db.Category.countDocuments()
+```
+
+### 2. Run Prisma Studio
+
+```bash
+npm run db:studio
+```
+
+Open http://localhost:5555 to browse your data with a nice UI.
+
+### 3. Test the Application
+
+```bash
+npm run dev:web
+```
+
+Visit http://localhost:3000 and verify:
+- Products are loading
+- You can add items to cart
+- Authentication works
+
+---
+
+## Part 5: Key Differences (MySQL vs MongoDB)
+
+### Data Types
+- **MySQL Decimal → MongoDB Float**: Prices are now Float instead of Decimal
+- **MySQL INT → MongoDB ObjectId**: All IDs are now MongoDB ObjectIds (24-character hex strings)
+- **MySQL AUTO_INCREMENT → MongoDB auto()**: IDs are auto-generated by MongoDB
+
+### Migrations
+- **MySQL**: Uses `prisma migrate dev` (creates migration files)
+- **MongoDB**: Uses `prisma db push` (directly syncs schema, no migration files)
+
+### Relationships
+- MongoDB supports the same relationships as MySQL via Prisma
+- Foreign keys are managed by Prisma, not at database level
+
+---
+
+## Part 6: Updated Scripts
+
+```bash
+# Generate Prisma Client (after schema changes)
+npm run db:gen
+
+# Push schema to database (creates/updates collections)
+npm run db:push
+
+# Seed database with initial data
+npm run db:seed
+
+# Open Prisma Studio (database GUI)
+npm run db:studio
+
+# Reset database and reseed
+npm run db:reset
+```
+
+---
+
+## Part 7: Connection String Formats
+
+### Local MongoDB
+```
+mongodb://localhost:27017/idgm_db
+```
+
+### Local MongoDB with Auth
+```
+mongodb://username:password@localhost:27017/idgm_db
+```
+
+### MongoDB Atlas
+```
+mongodb+srv://username:password@cluster.xxxxx.mongodb.net/idgm_db?retryWrites=true&w=majority
+```
+
+### Docker MongoDB
+```
+mongodb://username:password@localhost:27017/idgm_db?authSource=admin
+```
+
+---
+
+## Part 8: Troubleshooting
+
+### Error: "MongoServerError: Authentication failed"
+- Double-check your username and password
+- Ensure URL encoding for special characters in password
+  - Example: `p@ssw0rd` becomes `p%40ssw0rd`
+
+### Error: "MongooseServerSelectionError: connect ECONNREFUSED"
+- MongoDB is not running locally
+- Start MongoDB: `net start MongoDB` (Windows)
+- Or check if the connection string is correct
+
+### Error: "IP not whitelisted"
+- Go to MongoDB Atlas → Network Access
+- Add your current IP address or allow all (0.0.0.0/0) for development
+
+### Schema Sync Issues
+```bash
+# Force reset and reseed
+npm run db:reset
+```
+
+---
+
+## Part 9: Best Practices
+
+### Development
+- Use local MongoDB for development
+- Keep connection strings in `.env` (never commit!)
+- Use `npm run db:push` when changing schema
+
+### Production
+- Use MongoDB Atlas for production
+- Whitelist only necessary IPs
+- Use strong passwords with special characters
+- Enable backup in Atlas settings
+- Monitor database performance
+
+### Security
+- Never commit `.env` files
+- Rotate database passwords regularly
+- Use environment-specific connection strings
+- Enable MongoDB authentication
+
+---
+
+## Part 10: MongoDB Compass Tips
+
+### Viewing Data
+- Navigate to database → collection
+- Use filter: `{ email: "admin@idgm.com" }` to find specific records
+- Sort, filter, and search using the UI
+
+### Importing Data
+- Click "Add Data" → "Import JSON or CSV"
+- Select your file and import
+- Useful for bulk data imports
+
+### Indexes
+- Go to "Indexes" tab in a collection
+- Create indexes for frequently queried fields
+  - Example: `{ email: 1 }` for User collection
+
+---
+
+## Part 11: Next Steps
+
+After migration:
+
+1. **Test All Features**
+   - Authentication
+   - Product catalog
+   - Cart functionality
+   - Orders and payments
+   - Estate management
+   - Maintenance tickets
+
+2. **Update Documentation**
+   - Update README.md with MongoDB instructions
+   - Update warp.md with new tech stack
+
+3. **Configure Backup**
+   - MongoDB Atlas: Enable automatic backups
+   - Local: Setup MongoDB dump scripts
+
+4. **Performance Optimization**
+   - Create indexes on frequently queried fields
+   - Monitor query performance
+
+---
+
+## Support
+
+If you encounter any issues:
+1. Check the error message carefully
+2. Review this guide's troubleshooting section
+3. Check Prisma documentation: https://www.prisma.io/docs/concepts/database-connectors/mongodb
+4. Check MongoDB documentation: https://www.mongodb.com/docs/
+
+---
+
+**Last Updated**: 2025-10-30
+**Migration Status**: Complete
+**Database**: MongoDB (Local & Atlas)
