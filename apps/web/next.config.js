@@ -1,4 +1,10 @@
-const { PrismaPlugin } = require('@prisma/nextjs-monorepo-workaround-plugin')
+let PrismaPlugin
+try {
+  ({ PrismaPlugin } = require('@prisma/nextjs-monorepo-workaround-plugin'))
+} catch (e) {
+  // Optional in hosted builds; continue without the plugin
+  PrismaPlugin = class { apply() {} }
+}
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -7,8 +13,13 @@ const nextConfig = {
     // Server actions are now stable and enabled by default
   },
   images: {
-    unoptimized: true,
-    remotePatterns: [],
+    unoptimized: false,
+    domains: [
+      'images.unsplash.com',
+      'res.cloudinary.com',
+      'lh3.googleusercontent.com',
+      'avatars.githubusercontent.com',
+    ],
   },
   webpack: (config, { isServer }) => {
     if (isServer) {

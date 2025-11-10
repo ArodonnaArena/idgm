@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import { Bars3Icon, XMarkIcon, UserCircleIcon, ShoppingCartIcon, HeartIcon } from '@heroicons/react/24/outline'
 import { useCart } from './CartProvider'
+import { apiUrl } from '../lib/api'
 
 const navigation = [
   { name: 'Home', href: '/' },
@@ -27,7 +28,7 @@ export default function Navigation() {
   useEffect(() => {
     const load = async () => {
       if (!session) { setWishlistCount(0); return }
-      const res = await fetch('/api/wishlist', { cache: 'no-store' })
+const res = await fetch(apiUrl('/api/wishlist'), { cache: 'no-store' })
       if (res.ok) {
         const items = await res.json()
         setWishlistCount(Array.isArray(items) ? items.length : 0)
@@ -42,7 +43,7 @@ export default function Navigation() {
     const onWish = () => {
       // refetch wishlist count
       if (!session) return
-      fetch('/api/wishlist', { cache: 'no-store' })
+fetch(apiUrl('/api/wishlist'), { cache: 'no-store' })
         .then(r => r.ok ? r.json() : [])
         .then(items => setWishlistCount(Array.isArray(items) ? items.length : 0))
         .catch(() => {})

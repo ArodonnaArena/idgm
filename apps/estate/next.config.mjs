@@ -1,6 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  transpilePackages: ['@idgm/lib'],
   images: {
     domains: [
       'images.unsplash.com',

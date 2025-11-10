@@ -2,6 +2,7 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { useSession } from 'next-auth/react'
+import { apiUrl } from '../lib/api'
 
 export type CartItem = {
   id: string
@@ -51,7 +52,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
     setLoading(true)
     try {
-      const res = await fetch('/api/cart', { cache: 'no-store' })
+const res = await fetch(apiUrl('/api/cart'), { cache: 'no-store' })
       if (res.ok) {
         const data = await res.json()
         setCart({ id: data.id, items: data.items || [] })
@@ -63,7 +64,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const addToCart = useCallback(async (productId: number, quantity = 1) => {
     if (status !== 'authenticated') return false
-    const res = await fetch('/api/cart', {
+    const res = await fetch(apiUrl('/api/cart'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ productId, quantity })
@@ -80,7 +81,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const removeItem = useCallback(async (itemId: string) => {
     if (status !== 'authenticated') return false
-    const res = await fetch(`/api/cart?itemId=${itemId}`, { method: 'DELETE' })
+const res = await fetch(apiUrl(`/api/cart?itemId=${itemId}`), { method: 'DELETE' })
     if (res.ok) {
       await refresh()
       if (typeof window !== 'undefined') {
@@ -93,7 +94,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const updateQuantity = useCallback(async (itemId: string, quantity: number) => {
     if (status !== 'authenticated') return false
-    const res = await fetch('/api/cart', {
+    const res = await fetch(apiUrl('/api/cart'), {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ itemId, quantity })

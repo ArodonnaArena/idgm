@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { StarIcon, FireIcon, ShoppingCartIcon, HeartIcon } from '@heroicons/react/24/outline'
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid'
+import { apiUrl } from '../lib/api'
 
 interface ProductCardProps {
   product: any
@@ -32,7 +33,7 @@ export default function ProductCard({ product, index }: ProductCardProps) {
     setMessage('')
     
     try {
-      const res = await fetch('/api/cart', {
+const res = await fetch(apiUrl('/api/cart'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -70,7 +71,7 @@ export default function ProductCard({ product, index }: ProductCardProps) {
     
     try {
       if (isWishlisted) {
-        const res = await fetch(`/api/wishlist?productId=${product.id}`, {
+const res = await fetch(apiUrl(`/api/wishlist?productId=${product.id}`), {
           method: 'DELETE'
         })
         if (res.ok) {
@@ -80,7 +81,7 @@ export default function ProductCard({ product, index }: ProductCardProps) {
           }
         }
       } else {
-        const res = await fetch('/api/wishlist', {
+const res = await fetch(apiUrl('/api/wishlist'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ productId: product.id })

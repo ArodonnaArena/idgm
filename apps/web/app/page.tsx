@@ -23,6 +23,7 @@ import {
   ClockIcon
 } from '@heroicons/react/24/outline'
 import FlashSaleCountdown from '../components/FlashSaleCountdown'
+import { apiUrl } from '../lib/api'
 import { Price } from '../components/Currency'
 
 function AddToCartButton({ productId }: { productId: number }) {
@@ -33,7 +34,7 @@ function AddToCartButton({ productId }: { productId: number }) {
     setAdding(true)
     setMsg('')
     try {
-      const res = await fetch('/api/cart', {
+const res = await fetch(apiUrl('/api/cart'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ productId, quantity: 1 })
@@ -245,7 +246,7 @@ export default function HomePage() {
     const fetchHomepageData = async () => {
       try {
         setLoading(true)
-        const response = await fetch('/api/homepage')
+const response = await fetch(apiUrl('/api/homepage'))
         if (!response.ok) {
           throw new Error('Failed to fetch homepage data')
         }

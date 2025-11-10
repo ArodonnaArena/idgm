@@ -14,6 +14,7 @@ import {
   LockClosedIcon
 } from '@heroicons/react/24/outline'
 import { useCart } from '../../components/CartProvider'
+import { apiUrl } from '../../lib/api'
 
 interface CheckoutItem {
   id: string
@@ -61,7 +62,7 @@ export default function CheckoutPage() {
   const handlePayment = async (provider: 'paystack' | 'flutterwave') => {
     setLoading(true)
     try {
-      const res = await fetch('/api/payments/initialize', {
+const res = await fetch(apiUrl('/api/payments/initialize'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
