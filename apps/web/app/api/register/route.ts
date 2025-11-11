@@ -86,6 +86,24 @@ export async function POST(req: Request) {
         { status: 400 }
       )
     }
+
+    // Prisma initialization / connection issues (e.g., invalid/missing DATABASE_URL)
+    if (error instanceof Prisma.PrismaClientInitializationError) {
+      console.error('Prisma initialization error:', error.message)
+      return NextResponse.json(
+        { error: 'Database connection failed. Please try again later.' },
+        { status: 500 }
+      )
+    }
+
+    // Prisma client validation (bad data shape to Prisma)
+    if (error instanceof Prisma.PrismaClientValidationError) {
+      console.error('Prisma validation error:', error.message)
+      return NextResponse.json(
+        { error: 'Invalid data. Please check your inputs.' },
+        { status: 400 }
+      )
+    }
     
     // Handle Prisma unique constraint errors
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
