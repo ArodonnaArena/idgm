@@ -124,8 +124,6 @@ export default function AdminAnalyticsPage() {
       </div>
 
       {/* Order Status Breakdown */}
-    )
-  }
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg shadow-sm border p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Status Breakdown</h3>
