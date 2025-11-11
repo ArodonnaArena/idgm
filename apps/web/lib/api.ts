@@ -1,7 +1,10 @@
 export function apiUrl(path: string) {
-  const base = process.env.NEXT_PUBLIC_API_URL
-  if (!base) return path
+  // Absolute URLs pass through
   if (path.startsWith('http')) return path
   const p = path.startsWith('/') ? path : `/${path}`
-  return `${base}${p}`
+  // On the client, always use same-origin to avoid CORS
+  if (typeof window !== 'undefined') return p
+  // On the server, prepend external API base if provided
+  const base = process.env.NEXT_PUBLIC_API_URL || ''
+  return base ? `${base}${p}` : p
 }
