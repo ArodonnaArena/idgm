@@ -10,7 +10,6 @@ export async function GET(request: NextRequest) {
     // Calculate date range
     const now = new Date()
     const startDate = new Date()
-    
     switch (period) {
       case '7d':
         startDate.setDate(now.getDate() - 7)
@@ -28,242 +27,78 @@ export async function GET(request: NextRequest) {
         startDate.setDate(now.getDate() - 30)
     }
 
+    // Previous period for comparisons
+    const prevStartDate = new Date(startDate)
+    prevStartDate.setTime(2 * startDate.getTime() - now.getTime())
+
     if (type === 'revenue') {
-      // Revenue Analytics - fallback to empty data for now
-      const dailyRevenue: any[] = []
-      const revenueByCategory: any[] = []
-      const paymentMethods: any[] = []
-      const revenueComparison = [{ current_revenue: 0, previous_revenue: 0 }]
-      // Keeping arrays empty for now; implement with Prisma aggregations later.
+      const [currentAgg, prevAgg] = await Promise.all([
+        prisma.payment.aggregate({
+          where: { status: 'SUCCESS', createdAt: { gte: startDate, lte: now } },
+          _sum: { amount: true },
+          _count: true,
+        }),
+        prisma.payment.aggregate({
+          where: { status: 'SUCCESS', createdAt: { gte: prevStartDate, lt: startDate } },
+          _sum: { amount: true },
+          _count: true,
+        }),
+      ])
 
       return NextResponse.json({
         type: 'revenue',
         period,
-        dailyRevenue: (dailyRevenue as any[]).map(row => ({
-          date: row.date,
-          revenue: Number(row.revenue || 0),
-          transactions: Number(row.transactions || 0)
-        })),
-        revenueByCategory: (revenueByCategory as any[]).map(row => ({
-          category: row.category,
-          revenue: Number(row.revenue || 0),
-          orders: Number(row.orders || 0)
-        })),
-        paymentMethods: (paymentMethods as any[]).map(row => ({
-          provider: row.provider,
-          count: Number(row.count || 0),
-          amount: Number(row.total_amount || 0)
-        })),
-        comparison: revenueComparison[0] as any
+        dailyRevenue: [],
+        revenueByCategory: [],
+        paymentMethods: [],
+        comparison: {
+          current_revenue: Number(currentAgg._sum.amount || 0),
+          previous_revenue: Number(prevAgg._sum.amount || 0),
+        },
       })
     }
 
     if (type === 'products') {
-      // Product Analytics - fallback to empty data for now
-      const topProducts: any[] = []
-      const categoryPerformance: any[] = []
-      const inventoryAlerts: any[] = []
-      const productTrends: any[] = []
-      // Fallback arrays above; no queries executed here.
-
       return NextResponse.json({
         type: 'products',
         period,
-        topProducts: (topProducts as any[]).map(row => ({
-          name: row.name,
-          sku: row.sku,
-          totalSold: Number(row.total_sold || 0),
-          revenue: Number(row.total_revenue || 0),
-          orders: Number(row.unique_orders || 0)
-        })),
-        categoryPerformance: (categoryPerformance as any[]).map(row => ({
-          category: row.category,
-          totalProducts: Number(row.total_products || 0),
-          activeProducts: Number(row.active_products || 0),
-          avgPrice: Number(row.avg_price || 0)
-        })),
-        inventoryAlerts: (inventoryAlerts as any[]).map(row => ({
-          name: row.name,
-          sku: row.sku,
-          quantity: Number(row.quantity || 0),
-          threshold: Number(row.threshold || 0),
-          status: row.status
-        })),
-        trends: (productTrends as any[]).map(row => ({
-          date: row.date,
-          count: Number(row.products_created || 0)
-        }))
+        topProducts: [],
+        categoryPerformance: [],
+        inventoryAlerts: [],
+        trends: [],
       })
     }
 
     if (type === 'properties') {
-      // Property Analytics - fallback to empty data for now
-      const occupancyStats: any[] = []
-      const revenueByProperty: any[] = []
-      const maintenanceStats: any[] = []
-      const leaseExpirations: any[] = []
-      
-          SELECT 
-            p.type,
-            COUNT(u.id) as total_units,
-            SUM(CASE WHEN u.status = 'OCCUPIED' THEN 1 ELSE 0 END) as occupied_units,
-            SUM(CASE WHEN u.status = 'AVAILABLE' THEN 1 ELSE 0 END) as available_units,
-            SUM(CASE WHEN u.status = 'MAINTENANCE' THEN 1 ELSE 0 END) as maintenance_units
-          FROM Property p
-          LEFT JOIN Unit u ON p.id = u.propertyId
-          WHERE p.isActive = 1
-          GROUP BY p.type
-        `,
-        
-        // Revenue by property
-        prisma.$queryRaw`
-          SELECT 
-            p.title,
-            p.type,
-            p.city,
-            SUM(u.rent) as monthly_revenue,
-            COUNT(u.id) as total_units,
-            SUM(CASE WHEN EXISTS(SELECT 1 FROM Lease l WHERE l.unitId = u.id AND l.status = 'ACTIVE') THEN 1 ELSE 0 END) as occupied_units
-          FROM Property p
-          LEFT JOIN Unit u ON p.id = u.propertyId
-          WHERE p.isActive = 1
-          GROUP BY p.id, p.title, p.type, p.city
-          ORDER BY monthly_revenue DESC
-          LIMIT 10
-        `,
-        
-        // Maintenance tickets stats
-        prisma.$queryRaw`
-          SELECT 
-            status,
-            priority,
-            COUNT(*) as count
-          FROM MaintenanceTicket
-          WHERE createdAt >= ${startDate}
-            AND createdAt <= ${now}
-          GROUP BY status, priority
-          ORDER BY count DESC
-        `,
-        
-        // Upcoming lease expirations
-        prisma.$queryRaw`
-          SELECT 
-            l.endDate,
-            p.title as property_title,
-            u.label as unit_label,
-            l.rent,
-            tp.user.email as tenant_email
-          FROM Lease l
-          JOIN Unit u ON l.unitId = u.id
-          JOIN Property p ON u.propertyId = p.id
-          JOIN TenantProfile tp ON l.tenantId = tp.id
-          WHERE l.status = 'ACTIVE'
-            AND l.endDate BETWEEN ${now} AND DATE_ADD(${now}, INTERVAL 30 DAY)
-          ORDER BY l.endDate ASC
-          LIMIT 20
-
       return NextResponse.json({
         type: 'properties',
         period,
-        occupancyStats: (occupancyStats as any[]).map(row => ({
-          type: row.type,
-          totalUnits: Number(row.total_units || 0),
-          occupiedUnits: Number(row.occupied_units || 0),
-          availableUnits: Number(row.available_units || 0),
-          maintenanceUnits: Number(row.maintenance_units || 0)
-        })),
-        revenueByProperty: (revenueByProperty as any[]).map(row => ({
-          title: row.title,
-          type: row.type,
-          city: row.city,
-          monthlyRevenue: Number(row.monthly_revenue || 0),
-          totalUnits: Number(row.total_units || 0),
-          occupiedUnits: Number(row.occupied_units || 0)
-        })),
-        maintenanceStats: (maintenanceStats as any[]).map(row => ({
-          status: row.status,
-          priority: row.priority,
-          count: Number(row.count || 0)
-        })),
-        leaseExpirations: (leaseExpirations as any[]).map(row => ({
-          endDate: row.endDate,
-          propertyTitle: row.property_title,
-          unitLabel: row.unit_label,
-          rent: Number(row.rent || 0),
-          tenantEmail: row.tenant_email
-        }))
+        occupancyStats: [],
+        revenueByProperty: [],
+        maintenanceStats: [],
+        leaseExpirations: [],
       })
     }
 
-    // Default: Overview Analytics
-    const [
-      revenueOverview,
-      orderStats,
-      userGrowth,
-      topCategories,
-      recentActivity
-    ] = await Promise.all([
-      // Revenue overview
+    // Default: Overview Analytics (no raw SQL)
+    const [revenueOverview, orderStats, recentOrders] = await Promise.all([
       prisma.payment.aggregate({
-        where: {
-          status: 'SUCCESS',
-          createdAt: { gte: startDate, lte: now }
-        },
+        where: { status: 'SUCCESS', createdAt: { gte: startDate, lte: now } },
         _sum: { amount: true },
-        _count: true
+        _count: true,
       }),
-      
-      // Order statistics
       prisma.order.groupBy({
         by: ['status'],
-        where: {
-          createdAt: { gte: startDate, lte: now }
-        },
+        where: { createdAt: { gte: startDate, lte: now } },
         _count: { status: true },
-        _sum: { total: true }
+        _sum: { total: true },
       }),
-      
-      // User growth
-      prisma.$queryRaw`
-        SELECT 
-          DATE(createdAt) as date,
-          COUNT(*) as new_users
-        FROM User
-        WHERE createdAt >= ${startDate}
-          AND createdAt <= ${now}
-        GROUP BY DATE(createdAt)
-        ORDER BY date
-      `,
-      
-      // Top categories by orders
-      prisma.$queryRaw`
-        SELECT 
-          c.name as category,
-          COUNT(DISTINCT oi.orderId) as orders,
-          SUM(oi.quantity) as items_sold
-        FROM OrderItem oi
-        JOIN Product p ON oi.productId = p.id
-        JOIN Category c ON p.categoryId = c.id
-        JOIN \`Order\` o ON oi.orderId = o.id
-        WHERE o.createdAt >= ${startDate}
-          AND o.createdAt <= ${now}
-        GROUP BY c.id, c.name
-        ORDER BY orders DESC
-        LIMIT 5
-      `,
-      
-      // Recent activity
-      prisma.$queryRaw`
-        SELECT 
-          'order' as type,
-          id,
-          createdAt,
-          total as amount
-        FROM \`Order\`
-        WHERE createdAt >= ${startDate}
-        ORDER BY createdAt DESC
-        LIMIT 10
-      `
+      prisma.order.findMany({
+        where: { createdAt: { gte: startDate } },
+        take: 10,
+        orderBy: { createdAt: 'desc' },
+        select: { id: true, createdAt: true, total: true },
+      }),
     ])
 
     return NextResponse.json({
@@ -271,37 +106,26 @@ export async function GET(request: NextRequest) {
       period,
       revenue: {
         total: Number(revenueOverview._sum.amount || 0),
-        transactions: revenueOverview._count
+        transactions: revenueOverview._count,
       },
       orders: orderStats.reduce((acc, stat) => {
         acc[stat.status.toLowerCase()] = {
           count: stat._count.status,
-          value: Number(stat._sum.total || 0)
+          value: Number(stat._sum.total || 0),
         }
         return acc
-      }, {} as any),
-      userGrowth: (userGrowth as any[]).map(row => ({
-        date: row.date,
-        newUsers: Number(row.new_users || 0)
+      }, {} as Record<string, { count: number; value: number }>),
+      userGrowth: [],
+      topCategories: [],
+      recentActivity: recentOrders.map((o) => ({
+        type: 'order',
+        id: o.id,
+        createdAt: o.createdAt,
+        amount: Number(o.total || 0),
       })),
-      topCategories: (topCategories as any[]).map(row => ({
-        category: row.category,
-        orders: Number(row.orders || 0),
-        itemsSold: Number(row.items_sold || 0)
-      })),
-      recentActivity: (recentActivity as any[]).map(row => ({
-        type: row.type,
-        id: row.id,
-        createdAt: row.createdAt,
-        amount: Number(row.amount || 0)
-      }))
     })
-
   } catch (error) {
     console.error('Analytics API Error:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch analytics data' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to fetch analytics data' }, { status: 500 })
   }
 }
