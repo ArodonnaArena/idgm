@@ -47,7 +47,7 @@ const mockProperties = [
     city: "Lagos",
     state: "Lagos",
     description: "Modern duplex with swimming pool and garden",
-    images: [{ url: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600&h=400&fit=crop" }],
+    images: [{ url: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600&h=400&fit=crop", alt: "Luxury 4-Bedroom Duplex in Lekki" }],
     units: [{ id: 1, rent: 2500000, bedrooms: 4, bathrooms: 3, sizeSqm: 250, status: 'AVAILABLE' }],
     price: 120000000,
     landlord: { company: "Prime Properties Ltd", user: { name: "John Doe" } }
@@ -61,7 +61,7 @@ const mockProperties = [
     city: "Lagos",
     state: "Lagos",
     description: "Prime office location with modern amenities",
-    images: [{ url: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&h=400&fit=crop" }],
+    images: [{ url: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&h=400&fit=crop", alt: "Commercial Office Space - Victoria Island" }],
     units: [{ id: 2, rent: 5000000, bedrooms: 0, bathrooms: 2, sizeSqm: 180, status: 'AVAILABLE' }],
     price: 300000000,
     landlord: { company: "Corporate Realty", user: { name: "Jane Smith" } }
