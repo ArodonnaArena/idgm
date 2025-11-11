@@ -13,6 +13,15 @@ const registerSchema = z.object({
 
 export async function POST(req: Request) {
   try {
+    // Quick sanity check for DB config to provide clearer error in prod
+    if (!process.env.DATABASE_URL) {
+      console.error('Missing DATABASE_URL environment variable')
+      return NextResponse.json(
+        { error: 'Server not configured. Please try again later.' },
+        { status: 500 }
+      )
+    }
+
     const body = await req.json()
     const validatedData = registerSchema.parse(body)
     
@@ -45,13 +54,13 @@ export async function POST(req: Request) {
       create: { name: 'CUSTOMER', description: 'Customer' },
     })
 
-    // Create user first
+    // Create user first (omit phone if not provided to avoid unique index on null)
     const user = await prisma.user.create({
       data: {
         email,
         passwordHash,
         name,
-        phone: phone || null,
+        ...(phone ? { phone } : {}),
         status: 'ACTIVE',
       },
     })

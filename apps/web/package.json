@@ -5,7 +5,8 @@
     "dev": "next dev -p 3000",
     "build": "next build",
     "start": "next start -p 3000",
-    "lint": "next lint"
+    "lint": "next lint",
+    "postinstall": "prisma generate --schema ../../packages/db/prisma/schema.prisma"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.17",
@@ -28,6 +29,7 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "24.2.0",
     "@types/react": "19.1.9",
+    "prisma": "^5.17.0",
     "typescript": "^5.4.0"
   }
 }
