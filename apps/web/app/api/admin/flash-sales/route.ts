@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@idgm/lib/src/prisma'
+import { prisma } from '../../../../lib/prisma'
 
 // GET - List all flash sales
 export async function GET(request: NextRequest) {

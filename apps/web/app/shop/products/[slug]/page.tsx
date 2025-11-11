@@ -17,7 +17,8 @@ import {
   ArrowLeftIcon
 } from '@heroicons/react/24/outline'
 import { HeartIcon as HeartIconSolid, StarIcon as StarIconSolid } from '@heroicons/react/24/solid'
-import { api } from '@idgm/lib'
+import { apiUrl } from '../../../../lib/api'
+import { Price } from '../../../../components/Currency'
 
 interface Product {
   id: string
@@ -51,8 +52,11 @@ export default function ProductDetailPage() {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const data: any = await api.products.getBySlug(String(params.slug))
-        setProduct(data)
+        const res = await fetch(apiUrl(`/api/products/${String(params.slug)}`), { cache: 'no-store' })
+        if (res.ok) {
+          const data: any = await res.json()
+          setProduct(data)
+        }
       } catch (error) {
         console.error('Error fetching product:', error)
       } finally {
@@ -75,7 +79,7 @@ export default function ProductDetailPage() {
     setCartMessage('')
     
     try {
-      const res = await fetch('/api/cart', {
+      const res = await fetch(apiUrl('/api/cart'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -109,7 +113,7 @@ export default function ProductDetailPage() {
     try {
       if (isWishlisted) {
         // Remove from wishlist
-        const res = await fetch(`/api/wishlist?productId=${product?.id}`, {
+        const res = await fetch(apiUrl(`/api/wishlist?productId=${product?.id}`), {
           method: 'DELETE'
         })
         
@@ -120,7 +124,7 @@ export default function ProductDetailPage() {
         }
       } else {
         // Add to wishlist
-        const res = await fetch('/api/wishlist', {
+        const res = await fetch(apiUrl('/api/wishlist'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ productId: product?.id })
@@ -307,11 +311,11 @@ export default function ProductDetailPage() {
             {/* Price */}
             <div className="flex items-center space-x-4">
               <span className="text-4xl font-bold text-green-600">
-                ₦{Number(product.price).toLocaleString()}
+                <Price amount={product.price} />
               </span>
               {product.compareAt && Number(product.compareAt) > Number(product.price) && (
                 <span className="text-2xl text-gray-500 line-through">
-                  ₦{Number(product.compareAt).toLocaleString()}
+                  <Price amount={product.compareAt as number} />
                 </span>
               )}
             </div>
@@ -416,7 +420,7 @@ export default function ProductDetailPage() {
                   </div>
                   <div>
                     <p className="font-medium text-gray-900">Free Delivery</p>
-                    <p className="text-sm text-gray-600">Orders over ₦50,000</p>
+                    <p className="text-sm text-gray-600">Orders over <Price amount={50000} /></p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">

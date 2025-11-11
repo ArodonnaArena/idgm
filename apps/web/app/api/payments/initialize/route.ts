@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@idgm/lib/src/prisma'
+import { prisma } from '../../../../lib/prisma'
 import { z } from 'zod'
 
 const initializePaymentSchema = z.object({

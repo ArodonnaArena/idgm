@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { prisma } from '@idgm/lib/src/prisma'
+import { prisma } from '../../../lib/prisma'
 
 // GET - Get user's wishlist
 export async function GET() {

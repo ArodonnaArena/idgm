@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { ShoppingCartIcon, StarIcon, TagIcon, FireIcon } from '@heroicons/react/24/outline'
-import { api } from '@idgm/lib'
 import ProductCard from '../../../components/ProductCard'
+import { apiUrl } from '../../../lib/api'
 
 export const metadata = {
   title: 'Shop Products - IDGM Universal Limited',
@@ -29,15 +29,14 @@ function categoryImage(slug?: string, name?: string) {
 }
 
 export default async function ProductsPage({ searchParams }: { searchParams: { category?: string } }) {
-  const cats = await api.categories.list()
-  let categoryId: string | undefined
-  if (searchParams?.category) {
-    const match = Array.isArray(cats) ? cats.find((c: any) => c.slug === searchParams.category) : undefined
-    if (match) categoryId = match.id
-  }
-  const prodRes = await api.products.list({ take: 24, categoryId })
-  const products = (prodRes as any)?.products || []
-  const categories = Array.isArray(cats) ? cats : []
+  const params = new URLSearchParams({ limit: '24' })
+  if (searchParams?.category) params.set('category', searchParams.category)
+
+  const res = await fetch(apiUrl(`/api/products?${params.toString()}`), { cache: 'no-store' })
+  const data = res.ok ? await res.json() : { products: [], filters: { categories: [] } }
+
+  const products = data.products || []
+  const categories = data.filters?.categories || []
 
   return (
     <div className="bg-white">
@@ -115,7 +114,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: { c
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
                     <div className="text-xs opacity-90">Category</div>
                     <div className="text-sm font-bold text-center px-2 line-clamp-2">{category.name}</div>
-                    <div className="text-[10px] opacity-90 mt-1">{category._count?.products ?? 0} items</div>
+                    <div className="text-[10px] opacity-90 mt-1">{category.productCount ?? 0} items</div>
                   </div>
                 </Link>
               ))}
@@ -144,7 +143,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: { c
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-              {products.map((product, index) => (
+              {products.map((product: any, index: number) => (
                 <ProductCard key={product.id} product={product} index={index} />
               ))}
             </div>

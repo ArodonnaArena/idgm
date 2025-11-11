@@ -1,4 +1,4 @@
-import { prisma } from '@idgm/lib/src/prisma'
+import { prisma } from '../../../lib/prisma'
 import { notFound } from 'next/navigation'
 
 interface Params { params: { slug: string } }

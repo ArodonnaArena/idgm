@@ -1,4 +1,4 @@
-import { prisma } from '@idgm/lib/src/prisma'
+import { prisma } from '../../../lib/prisma'
 import bcrypt from 'bcryptjs'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
