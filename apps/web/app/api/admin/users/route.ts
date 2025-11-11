@@ -216,10 +216,10 @@ export async function PATCH(request: NextRequest) {
       // Add new roles
       if (roleIds.length > 0) {
         await prisma.userRole.createMany({
-          data: roleIds.map((roleId: number) => ({
+          data: (roleIds as Array<string | number>).map((roleId) => ({
             userId,
-            roleId
-          }))
+            roleId: String(roleId),
+          })),
         })
       }
     }
