@@ -24,14 +24,16 @@ export async function GET() {
             }
           }
         },
-        cart: {
+        carts: {
           include: {
             items: {
               include: {
-                product: true
+                product: { include: { images: true } }
               }
             }
-          }
+          },
+          take: 1,
+          orderBy: { createdAt: 'desc' }
         }
       }
     })
@@ -52,10 +54,11 @@ export async function GET() {
       }
     })
 
-    const cartItemsCount = user.cart?.items.reduce((sum, item) => sum + item.quantity, 0) || 0
+    const selectedCart = user.carts?.[0] || null
+    const cartItemsCount = selectedCart?.items.reduce((sum, item) => sum + item.quantity, 0) || 0
     
-    const cartTotal = user.cart?.items.reduce((sum, item) => {
-      return sum + (item.product.price * item.quantity)
+    const cartTotal = selectedCart?.items.reduce((sum, item) => {
+      return sum + (Number(item.product.price) * item.quantity)
     }, 0) || 0
 
     return NextResponse.json({
@@ -77,11 +80,11 @@ export async function GET() {
         createdAt: order.createdAt,
         itemCount: order.items.length
       })),
-      cart: user.cart ? {
-        id: user.cart.id,
+      cart: selectedCart ? {
+        id: selectedCart.id,
         itemCount: cartItemsCount,
         total: cartTotal,
-        items: user.cart.items.map(item => ({
+        items: selectedCart.items.map(item => ({
           id: item.id,
           quantity: item.quantity,
           product: {
