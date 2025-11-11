@@ -179,6 +179,7 @@ export default function AdminAnalyticsPage() {
       </div>
     </div>
   )
+  }
 
   const renderRevenueAnalytics = (data: any) => (
     <div className="space-y-6">
