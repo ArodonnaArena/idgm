@@ -49,41 +49,46 @@ export default function AdminAnalyticsPage() {
     fetchAnalytics()
   }, [selectedType, selectedPeriod])
 
-  const renderOverviewAnalytics = (data: any) => (
-    <div className="space-y-6">
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <div className="flex items-center">
-            <div className="p-3 bg-green-100 rounded-lg">
-              <CurrencyDollarIcon className="w-6 h-6 text-green-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Total Revenue</p>
-              <p className="text-2xl font-bold text-gray-900">
-                ₦{data.revenue?.total?.toLocaleString() || 0}
-              </p>
-              <p className="text-sm text-gray-600">{data.revenue?.transactions || 0} transactions</p>
-            </div>
-          </div>
-        </div>
+  const renderOverviewAnalytics = (data: any) => {
+    const ordersArray = Object.values((data?.orders ?? {}) as Record<string, { count: number; value: number }>)
+    const totalOrders = ordersArray.reduce((sum, order) => sum + (order?.count ?? 0), 0)
+    const totalOrderValue = ordersArray.reduce((sum, order) => sum + (order?.value ?? 0), 0)
 
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <div className="flex items-center">
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <ShoppingBagIcon className="w-6 h-6 text-blue-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Total Orders</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {Object.values(data.orders || {}).reduce((sum: number, order: any) => sum + order.count, 0)}
-              </p>
-              <p className="text-sm text-gray-600">
-                ₦{Object.values(data.orders || {}).reduce((sum: number, order: any) => sum + order.value, 0).toLocaleString()}
-              </p>
+    return (
+      <div className="space-y-6">
+        {/* Key Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="flex items-center">
+              <div className="p-3 bg-green-100 rounded-lg">
+                <CurrencyDollarIcon className="w-6 h-6 text-green-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500">Total Revenue</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  ₦{data.revenue?.total?.toLocaleString() || 0}
+                </p>
+                <p className="text-sm text-gray-600">{data.revenue?.transactions || 0} transactions</p>
+              </div>
             </div>
           </div>
-        </div>
+
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="flex items-center">
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <ShoppingBagIcon className="w-6 h-6 text-blue-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500">Total Orders</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {totalOrders}
+                </p>
+                <p className="text-sm text-gray-600">
+                  ₦{totalOrderValue.toLocaleString()}
+                </p>
+              </div>
+            </div>
+          </div>
 
         <div className="bg-white rounded-lg shadow-sm border p-6">
           <div className="flex items-center">
@@ -119,6 +124,8 @@ export default function AdminAnalyticsPage() {
       </div>
 
       {/* Order Status Breakdown */}
+    )
+  }
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg shadow-sm border p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Status Breakdown</h3>
