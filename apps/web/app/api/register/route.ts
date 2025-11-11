@@ -37,22 +37,31 @@ export async function POST(req: Request) {
     
     // Hash password
     const passwordHash = await bcrypt.hash(password, 12)
-    
-    // Create user with CUSTOMER role
-    const user = await prisma.user.create({ 
-      data: { 
-        email, 
-        passwordHash, 
+
+    // Ensure CUSTOMER role exists (by name)
+    const customerRole = await prisma.role.upsert({
+      where: { name: 'CUSTOMER' },
+      update: {},
+      create: { name: 'CUSTOMER', description: 'Customer' },
+    })
+
+    // Create user first
+    const user = await prisma.user.create({
+      data: {
+        email,
+        passwordHash,
         name,
         phone: phone || null,
-        roles: { 
-          create: { 
-            role: { 
-              connect: { name: 'CUSTOMER' } 
-            } 
-          } 
-        } 
-      } 
+        status: 'ACTIVE',
+      },
+    })
+
+    // Attach CUSTOMER role to user
+    await prisma.userRole.create({
+      data: {
+        userId: user.id,
+        roleId: customerRole.id,
+      },
     })
     
     return NextResponse.json({ 
