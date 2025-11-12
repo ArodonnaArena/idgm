@@ -93,8 +93,9 @@ export async function POST(req: Request) {
     // Prisma initialization / connection issues (e.g., invalid/missing DATABASE_URL)
     if (error instanceof Prisma.PrismaClientInitializationError) {
       console.error('Prisma initialization error:', error.message)
+      const code = (error as any)?.errorCode || 'PRISMA_INIT'
       return NextResponse.json(
-        { error: 'Database connection failed. Please try again later.' },
+        { error: 'Database connection failed. Please try again later.', code },
         { status: 500 }
       )
     }
