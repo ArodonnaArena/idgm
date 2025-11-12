@@ -2,7 +2,13 @@
  * API Client for communicating with the backend API on Render
  */
 
+// Fallback to localhost if not set - UPDATE THIS IN PRODUCTION!
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:4000';
+
+if (!process.env.NEXT_PUBLIC_BACKEND_URL && typeof window === 'undefined') {
+  console.warn('⚠️ NEXT_PUBLIC_BACKEND_URL is not set! Using localhost:4000 as fallback.');
+  console.warn('Set NEXT_PUBLIC_BACKEND_URL in Vercel environment variables.');
+}
 
 interface FetchOptions extends RequestInit {
   token?: string;
