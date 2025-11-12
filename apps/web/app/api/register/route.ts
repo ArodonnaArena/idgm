@@ -15,7 +15,12 @@ export async function POST(req: Request) {
     const validatedData = registerSchema.parse(body)
     
     // Forward request to backend API
-    const result = await apiClient.register(validatedData)
+    const result = await apiClient.register({
+      email: validatedData.email,
+      password: validatedData.password,
+      name: validatedData.name,
+      phone: validatedData.phone
+    })
     
     return NextResponse.json(result)
     
