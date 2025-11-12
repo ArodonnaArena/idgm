@@ -15,6 +15,8 @@ const registerSchema = z.object({
 })
 
 export async function POST(req: Request) {
+  // Track progress across try/catch for better error reporting
+  let step: 'check' | 'hash' | 'role' | 'user' | 'link' | undefined
   try {
     // Quick sanity check for DB config to provide clearer error in prod
     if (!process.env.DATABASE_URL) {
@@ -30,8 +32,8 @@ export async function POST(req: Request) {
     
     const { email, password, name, phone } = validatedData
 
-    // Step 1: existing user check
-    let step: 'check' | 'hash' | 'role' | 'user' | 'link' | undefined = 'check'
+// Step 1: existing user check
+    step = 'check'
     const existingUser = await prisma.user.findFirst({
       where: {
         OR: [
@@ -104,9 +106,6 @@ export async function POST(req: Request) {
         { status: 500 }
       )
     }
-
-    // If we set a step variable above, include it for easier debugging
-    const stepInfo = (typeof (globalThis as any).step !== 'undefined') ? (globalThis as any).step : undefined
 
     // Prisma client validation (bad data shape to Prisma)
     if (error instanceof Prisma.PrismaClientValidationError) {
