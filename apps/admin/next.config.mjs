@@ -1,3 +1,5 @@
+import path from 'path'
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   transpilePackages: ['@idgm/lib'],
@@ -8,6 +10,10 @@ const nextConfig = {
       'lh3.googleusercontent.com',
       'avatars.githubusercontent.com',
     ],
+  },
+  experimental: {
+    // Include monorepo packages in build tracing
+    outputFileTracingRoot: path.join(process.cwd(), '../../'),
   },
 }
 
