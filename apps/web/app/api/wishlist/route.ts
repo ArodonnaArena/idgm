@@ -5,6 +5,11 @@ import { prisma } from '../../../lib/prisma'
 // GET - Get user's wishlist
 export async function GET() {
   try {
+    // Return empty wishlist on Vercel (Prisma not available)
+    if (!process.env.DATABASE_URL) {
+      return NextResponse.json([])
+    }
+    
     const session = await getServerSession()
     
     if (!session?.user?.email) {

@@ -5,6 +5,11 @@ import { prisma } from '../../../lib/prisma'
 // GET - Get user's cart
 export async function GET() {
   try {
+    // Return empty cart on Vercel (Prisma not available)
+    if (!process.env.DATABASE_URL) {
+      return NextResponse.json({ items: [] })
+    }
+    
     const session = await getServerSession()
     
     if (!session?.user?.email) {
