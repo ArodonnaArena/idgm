@@ -14,16 +14,16 @@ import {
   CreditCardIcon,
   SparklesIcon
 } from '@heroicons/react/24/outline'
-import { useCart } from '../../components/CartProvider'
+import { useCart } from '../../contexts/CartContext'
 import { Price } from '../../components/Currency'
 
 export default function CartPage() {
-  const { cart, loading, updateQuantity, removeItem, subtotal, count, refresh } = useCart()
+  const { items, updateQuantity, removeItem, total: cartTotal } = useCart()
   const [promoCode, setPromoCode] = useState('')
   const [promoApplied, setPromoApplied] = useState(false)
   const [promoDiscount, setPromoDiscount] = useState(0)
 
-  useEffect(() => { refresh() }, [refresh])
+  const subtotal = cartTotal
 
   const deliveryFee = useMemo(() => (subtotal > 50000 ? 0 : 5000), [subtotal])
   const discountAmount = useMemo(() => (promoApplied ? subtotal * (promoDiscount / 100) : 0), [promoApplied, promoDiscount, subtotal])
@@ -38,20 +38,6 @@ export default function CartPage() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 flex items-center justify-center">
-        <div className="relative">
-          <div className="w-32 h-32 border-4 border-green-200 border-t-green-600 rounded-full animate-spin"></div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <ShoppingCartIcon className="w-8 h-8 text-green-600" />
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  const items = cart?.items || []
   if (items.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 flex items-center justify-center">
@@ -105,8 +91,8 @@ export default function CartPage() {
                     <div className="flex-shrink-0">
                       <div className="w-24 h-24 bg-gray-100 rounded-lg overflow-hidden group">
                         <img
-                          src={item.product?.images?.[0]?.url || '/placeholder.jpg'}
-                          alt={item.product?.images?.[0]?.alt || item.product?.name || 'Product'}
+                          src={item.image || '/placeholder.jpg'}
+                          alt={item.name || 'Product'}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                         />
                       </div>
@@ -116,9 +102,7 @@ export default function CartPage() {
                       <div className="flex justify-between items-start">
                         <div className="min-w-0">
                           <h3 className="text-lg font-semibold text-gray-900 hover:text-green-600 transition-colors line-clamp-1">
-                            <Link href={`/shop/${item.product?.slug || ''}`}>
-                              {item.product?.name || 'Product'}
-                            </Link>
+                            {item.name || 'Product'}
                           </h3>
 <p className="text-green-600 font-bold text-xl mt-1">
                             <Price amount={item.price} />

@@ -3,7 +3,8 @@ import type { ReactNode } from 'react'
 import Navigation from '../components/Navigation'
 import Footer from '../components/Footer'
 import SessionProvider from '../components/SessionProvider'
-import { CartProvider } from '../components/CartProvider'
+import { CartProvider } from '../contexts/CartContext'
+import { WishlistProvider } from '../contexts/WishlistContext'
 
 export const metadata = {
   title: 'IDGM Universal Limited - Agriculture, Kitchenware & Real Estate',
@@ -16,11 +17,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body className="min-h-screen antialiased bg-white text-gray-900">
         <SessionProvider>
           <CartProvider>
-            <Navigation />
-            <main className="flex-1">
-              {children}
-            </main>
-            <Footer />
+            <WishlistProvider>
+              <Navigation />
+              <main className="flex-1">
+                {children}
+              </main>
+              <Footer />
+            </WishlistProvider>
           </CartProvider>
         </SessionProvider>
       </body>

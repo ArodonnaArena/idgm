@@ -1,6 +1,8 @@
 import { prisma } from '../../lib/prisma'
 import Link from 'next/link'
 
+export const dynamic = 'force-dynamic'
+
 export default async function EstateList() {
   const properties = await prisma.property.findMany({ include: { images: true, units: true }, orderBy: { createdAt: 'desc' } })
   return (

@@ -2,11 +2,11 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import { Bars3Icon, XMarkIcon, UserCircleIcon, ShoppingCartIcon, HeartIcon } from '@heroicons/react/24/outline'
-import { useCart } from './CartProvider'
-import { apiUrl } from '../lib/api'
+import { useCart } from '../contexts/CartContext'
+import { useWishlist } from '../contexts/WishlistContext'
 
 const navigation = [
   { name: 'Home', href: '/' },
@@ -21,40 +21,8 @@ export default function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const { data: session, status } = useSession()
-  const { count, refresh } = useCart()
-  const [wishlistCount, setWishlistCount] = useState(0)
-
-  // load wishlist count when authenticated
-  useEffect(() => {
-    const load = async () => {
-      if (!session) { setWishlistCount(0); return }
-const res = await fetch(apiUrl('/api/wishlist'), { cache: 'no-store' })
-      if (res.ok) {
-        const items = await res.json()
-        setWishlistCount(Array.isArray(items) ? items.length : 0)
-      }
-    }
-    load()
-  }, [session])
-
-  // listen to events to refresh counters
-  useEffect(() => {
-    const onCart = () => refresh()
-    const onWish = () => {
-      // refetch wishlist count
-      if (!session) return
-fetch(apiUrl('/api/wishlist'), { cache: 'no-store' })
-        .then(r => r.ok ? r.json() : [])
-        .then(items => setWishlistCount(Array.isArray(items) ? items.length : 0))
-        .catch(() => {})
-    }
-    window.addEventListener('cart:updated', onCart)
-    window.addEventListener('wishlist:updated', onWish)
-    return () => {
-      window.removeEventListener('cart:updated', onCart)
-      window.removeEventListener('wishlist:updated', onWish)
-    }
-  }, [refresh, session])
+  const { itemCount } = useCart()
+  const { itemCount: wishlistCount } = useWishlist()
 
   return (
     <header className="bg-white shadow-sm border-b">
@@ -105,9 +73,9 @@ fetch(apiUrl('/api/wishlist'), { cache: 'no-store' })
               </Link>
               <Link href="/cart" className="relative text-gray-700 hover:text-orange-600">
                 <ShoppingCartIcon className="h-6 w-6" />
-                {count > 0 && (
+                {itemCount > 0 && (
                   <span className="absolute -top-2 -right-2 text-[10px] bg-orange-500 text-white rounded-full h-5 min-w-[20px] flex items-center justify-center px-1">
-                    {count}
+                    {itemCount}
                   </span>
                 )}
               </Link>
@@ -202,9 +170,9 @@ fetch(apiUrl('/api/wishlist'), { cache: 'no-store' })
                       </Link>
                       <Link href="/cart" className="relative text-gray-700 hover:text-orange-600">
                         <ShoppingCartIcon className="h-6 w-6" />
-                        {count > 0 && (
+                        {itemCount > 0 && (
                           <span className="absolute -top-2 -right-2 text-[10px] bg-orange-500 text-white rounded-full h-5 min-w-[20px] flex items-center justify-center px-1">
-                            {count}
+                            {itemCount}
                           </span>
                         )}
                       </Link>

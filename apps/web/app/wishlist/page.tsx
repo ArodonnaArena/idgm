@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { HeartIcon, XMarkIcon, ShoppingCartIcon } from '@heroicons/react/24/outline'
-import { useCart } from '../../components/CartProvider'
+import { useCart } from '../../contexts/CartContext'
+import { useWishlist } from '../../contexts/WishlistContext'
 
 interface WishlistItem {
   id: string
@@ -17,43 +18,8 @@ interface WishlistItem {
 }
 
 export default function WishlistPage() {
-  const [items, setItems] = useState<WishlistItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const { addToCart } = useCart()
-
-  const load = async () => {
-    setLoading(true)
-    try {
-      const res = await fetch('/api/wishlist', { cache: 'no-store' })
-      if (res.ok) {
-        const data = await res.json()
-        setItems(Array.isArray(data) ? data : [])
-      }
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => { load() }, [])
-
-  const remove = async (productId: number) => {
-    const res = await fetch(`/api/wishlist?productId=${productId}`, { method: 'DELETE' })
-    if (res.ok) {
-      window.dispatchEvent(new CustomEvent('wishlist:updated'))
-      load()
-    }
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500"></div>
-          <p className="mt-4 text-gray-600">Loading your wishlist...</p>
-        </div>
-      </div>
-    )
-  }
+  const { items, removeItem } = useWishlist()
+  const { addItem } = useCart()
 
   if (items.length === 0) {
     return (
@@ -73,28 +39,26 @@ export default function WishlistPage() {
       <h1 className="text-3xl font-black mb-6">My Wishlist</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {items.map((w) => (
-          <div key={w.id} className="bg-white border rounded-lg p-4 flex gap-4 items-center">
-            <Link href={`/shop/${w.product.slug}`}>
-              <img
-                src={w.product.images?.[0]?.url || 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=200&h=200&fit=crop'}
-                alt={w.product.images?.[0]?.alt || w.product.name}
-                className="w-20 h-20 object-cover rounded"
-              />
-            </Link>
+          <div key={w.productId} className="bg-white border rounded-lg p-4 flex gap-4 items-center">
+            <img
+              src={w.image || 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=200&h=200&fit=crop'}
+              alt={w.name}
+              className="w-20 h-20 object-cover rounded"
+            />
             <div className="flex-1 min-w-0">
-              <Link href={`/shop/${w.product.slug}`} className="font-semibold hover:text-orange-600 line-clamp-1">
-                {w.product.name}
-              </Link>
-              <div className="text-orange-600 font-bold">₦{Number(w.product.price).toLocaleString()}</div>
+              <div className="font-semibold hover:text-orange-600 line-clamp-1">
+                {w.name}
+              </div>
+              <div className="text-orange-600 font-bold">₦{Number(w.price).toLocaleString()}</div>
               <div className="mt-2 flex gap-2">
                 <button
-                  onClick={async () => { await addToCart(w.product.id, 1) }}
+                  onClick={() => addItem({ id: `${Date.now()}-${w.productId}`, productId: w.productId, quantity: 1, price: w.price, name: w.name, image: w.image })}
                   className="inline-flex items-center gap-1 bg-orange-500 text-white text-xs px-3 py-1 rounded hover:bg-orange-600"
                 >
                   <ShoppingCartIcon className="w-4 h-4" /> Add to cart
                 </button>
                 <button
-                  onClick={() => remove(w.product.id)}
+                  onClick={() => removeItem(w.productId)}
                   className="inline-flex items-center gap-1 text-xs px-3 py-1 rounded border hover:bg-gray-50"
                 >
                   <XMarkIcon className="w-4 h-4" /> Remove

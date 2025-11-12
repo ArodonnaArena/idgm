@@ -13,7 +13,7 @@ import {
   SparklesIcon,
   LockClosedIcon
 } from '@heroicons/react/24/outline'
-import { useCart } from '../../components/CartProvider'
+import { useCart } from '../../contexts/CartContext'
 import { apiUrl } from '../../lib/api'
 
 interface CheckoutItem {
@@ -50,7 +50,8 @@ export default function CheckoutPage() {
     postalCode: ''
   })
 
-  const { cart, subtotal } = useCart()
+  const { items, total: cartTotal } = useCart()
+  const subtotal = cartTotal
   const deliveryFee = subtotal > 50000 ? 0 : 5000
   const total = subtotal + deliveryFee
 
@@ -72,7 +73,7 @@ const res = await fetch(apiUrl('/api/payments/initialize'), {
           provider,
           metadata: {
             customer: { name: `${shippingInfo.firstName} ${shippingInfo.lastName}`.trim(), email: shippingInfo.email, phone: shippingInfo.phone },
-            order: { id: cart?.id || 'cart', items: (cart?.items || []).map(it => ({ id: it.id, productId: it.productId, quantity: it.quantity, price: it.price })) }
+            order: { id: 'cart', items: items.map(it => ({ id: it.id, productId: it.productId, quantity: it.quantity, price: it.price })) }
           }
         })
       })
@@ -400,24 +401,24 @@ const res = await fetch(apiUrl('/api/payments/initialize'), {
               <div className="p-6 space-y-6">
                 {/* Items */}
                 <div className="space-y-4">
-                  {(cart?.items || []).map((item) => (
-                    <div key={item.id} className="flex items-center space-x-3">
-                      <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden">
-                        <img
-                          src={item.product?.images?.[0]?.url || 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=200&h=200&fit=crop'}
-                          alt={item.product?.name || 'Product'}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="flex-grow min-w-0">
-                        <h4 className="font-medium text-gray-900 line-clamp-1">{item.product?.name || 'Product'}</h4>
-                        <p className="text-sm text-gray-600">Qty: {Number(item.quantity)}</p>
-                      </div>
-                      <p className="font-semibold text-gray-900">
-                        ₦{(Number(item.price) * Number(item.quantity)).toLocaleString()}
-                      </p>
+                {items.map((item) => (
+                  <div key={item.id} className="flex items-center space-x-3">
+                    <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden">
+                      <img
+                        src={item.image || 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=200&h=200&fit=crop'}
+                        alt={item.name || 'Product'}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
-                  ))}
+                    <div className="flex-grow min-w-0">
+                      <h4 className="font-medium text-gray-900 line-clamp-1">{item.name || 'Product'}</h4>
+                      <p className="text-sm text-gray-600">Qty: {Number(item.quantity)}</p>
+                    </div>
+                    <p className="font-semibold text-gray-900">
+                      ₦{(Number(item.price) * Number(item.quantity)).toLocaleString()}
+                    </p>
+                  </div>
+                ))}
                 </div>
 
                 {/* Totals */}
