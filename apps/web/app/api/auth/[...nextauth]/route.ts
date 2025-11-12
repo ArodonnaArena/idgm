@@ -20,7 +20,7 @@ const handler = NextAuth({
           const response = await apiClient.login({
             email: credentials.email,
             password: credentials.password
-          })
+          }) as any
           
           // Backend should return user data and token
           if (response && response.user) {
