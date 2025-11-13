@@ -4,14 +4,14 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 
 const nav = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/products", label: "Products" },
-  { href: "/properties", label: "Properties" },
-  { href: "/orders", label: "Orders" },
-  { href: "/tickets", label: "Tickets" },
-  { href: "/users", label: "Users" },
-  { href: "/roles", label: "Roles" },
-  { href: "/categories", label: "Categories" }
+  { href: "/protected/dashboard", label: "Dashboard" },
+  { href: "/protected/products", label: "Products" },
+  { href: "/protected/properties", label: "Properties" },
+  { href: "/protected/orders", label: "Orders" },
+  { href: "/protected/tickets", label: "Tickets" },
+  { href: "/protected/users", label: "Users" },
+  { href: "/protected/roles", label: "Roles" },
+  { href: "/protected/categories", label: "Categories" }
 ]
 
 export default function Sidebar() {
