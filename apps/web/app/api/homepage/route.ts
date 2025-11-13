@@ -5,7 +5,7 @@ import { apiClient } from '../../../lib/api-client'
 export async function GET(request: NextRequest) {
   try {
     // Fetch products from backend API instead of Prisma
-    const productsResponse = await apiClient.getProducts({
+    const productsResponse: any = await apiClient.getProducts({
       skip: 0,
       take: 8
     })
