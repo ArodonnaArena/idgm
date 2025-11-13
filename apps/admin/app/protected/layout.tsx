@@ -10,7 +10,7 @@ export default async function ProtectedLayout({ children }: { children: ReactNod
   const session = await getServerSession(authOptions)
   if (!session) redirect("/login")
   const roles: string[] = ((session.user as any)?.roles ?? []) as string[]
-  const allowed = roles.includes("ADMIN") || roles.includes("STAFF")
+  const allowed = roles.includes("admin") || roles.includes("staff") || roles.includes("ADMIN") || roles.includes("STAFF")
   if (!allowed) {
     return (
       <div className="mx-auto max-w-xl p-10">

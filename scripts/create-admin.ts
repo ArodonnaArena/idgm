@@ -1,5 +1,17 @@
 import { PrismaClient } from '@prisma/client'
-import * as bcrypt from 'bcryptjs'
+import bcrypt from 'bcryptjs'
+import * as dotenv from 'dotenv'
+import * as path from 'path'
+
+// Load environment variables from apps/admin/.env.local
+const envPath = path.join(process.cwd(), 'apps', 'admin', '.env.local')
+dotenv.config({ path: envPath })
+
+if (!process.env.DATABASE_URL) {
+  console.error('❌ DATABASE_URL not found in environment variables')
+  console.error(`Tried loading from: ${envPath}`)
+  process.exit(1)
+}
 
 const prisma = new PrismaClient()
 
@@ -37,11 +49,13 @@ async function createAdmin() {
       })
     }
 
-    // Create user with admin role
+    // Create user with admin role (generate unique phone to avoid constraint issues)
+    const uniquePhone = `+234${Date.now().toString().slice(-10)}`
     const user = await prisma.user.create({
       data: {
         email,
         name,
+        phone: uniquePhone,
         passwordHash,
         status: 'ACTIVE',
         roles: {
