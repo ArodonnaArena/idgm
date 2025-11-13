@@ -86,7 +86,10 @@ class ApiClient {
     if (params?.search) query.set('search', params.search);
     if (params?.categoryId) query.set('categoryId', params.categoryId);
 
-    return this.request(`/api/products?${query.toString()}`);
+    const url = `/api/products?${query.toString()}`;
+    console.log('ApiClient: Fetching products from', `${this.baseURL}${url}`);
+    
+    return this.request(url);
   }
 
   async getProduct(id: string) {
