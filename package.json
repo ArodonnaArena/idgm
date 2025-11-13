@@ -19,6 +19,7 @@
     "db:seed": "ts-node packages/db/prisma/seed.ts",
     "db:studio": "prisma studio --schema packages/db/prisma/schema.prisma",
     "db:reset": "prisma db push --force-reset --schema packages/db/prisma/schema.prisma && npm run db:seed",
+    "create-admin": "ts-node scripts/create-admin.ts",
     "install:all": "npm install && cd apps/web && npm install"
   },
   "devDependencies": {
