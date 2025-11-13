@@ -42,7 +42,7 @@ export default function ProductsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Products</h1>
         <Link
-          href="/products/new"
+          href="/protected/products/new"
           className="rounded bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
         >
           Add Product
@@ -135,7 +135,7 @@ export default function ProductsPage() {
                   </td>
                   <td className="px-4 py-3 text-right text-sm">
                     <Link
-                      href={`/products/${p.id}/edit`}
+                      href={`/protected/products/${p.id}/edit`}
                       className="mr-2 text-blue-600 hover:text-blue-800"
                     >
                       Edit

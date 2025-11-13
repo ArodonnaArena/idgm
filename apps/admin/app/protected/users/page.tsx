@@ -42,7 +42,7 @@ export default function UsersPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Users</h1>
         <Link
-          href="/users/new"
+          href="/protected/users/new"
           className="rounded bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
         >
           Add User
@@ -125,7 +125,7 @@ export default function UsersPage() {
                   </td>
                   <td className="px-4 py-3 text-right text-sm">
                     <Link
-                      href={`/users/${u.id}/edit`}
+                      href={`/protected/users/${u.id}/edit`}
                       className="mr-2 text-blue-600 hover:text-blue-800"
                     >
                       Edit
