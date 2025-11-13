@@ -4,10 +4,22 @@ import { apiClient } from '../../../lib/api-client'
 
 export async function GET(request: NextRequest) {
   try {
-    // Fetch products from backend API instead of Prisma
+    console.log('Homepage API: Fetching products from backend...')
+    console.log('Backend URL:', process.env.NEXT_PUBLIC_BACKEND_URL)
+    
+    // Fetch products from backend API with timeout
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 5000) // 5s timeout
+    
     const productsResponse: any = await apiClient.getProducts({
       skip: 0,
       take: 8
+    })
+    
+    clearTimeout(timeoutId)
+    console.log('Homepage API: Got response:', { 
+      hasProducts: !!productsResponse?.products,
+      count: productsResponse?.products?.length || 0 
     })
 
     // Extract products from response
