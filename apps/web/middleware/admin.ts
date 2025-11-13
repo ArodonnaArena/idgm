@@ -5,7 +5,7 @@ export async function adminAuthMiddleware(request: NextRequest) {
   try {
     // Get the JWT token
     const token = await getToken({ 
-      req: request,
+      req: request as any,
       secret: process.env.NEXTAUTH_SECRET 
     })
 
