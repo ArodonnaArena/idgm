@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     console.log('Products API: Fetching with params:', { skip, take, search, categoryId })
 
     // Forward request to backend API
-    const products = await apiClient.getProducts({
+    const products: any = await apiClient.getProducts({
       skip,
       take,
       search,
