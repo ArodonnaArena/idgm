@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { ShoppingCartIcon, StarIcon, TagIcon, FireIcon } from '@heroicons/react/24/outline'
 import ProductCard from '../../../components/ProductCard'
+import { apiClient } from '../../../lib/api-client'
 
 export const metadata = {
   title: 'Shop Products - IDGM Universal Limited',
@@ -31,20 +32,33 @@ function categoryImage(slug?: string, name?: string) {
 }
 
 export default async function ProductsPage({ searchParams }: { searchParams: { category?: string } }) {
-  const params = new URLSearchParams({ limit: '24' })
-  if (searchParams?.category) params.set('category', searchParams.category)
+  const params: { skip: number; take: number; search?: string; categoryId?: string } = {
+    skip: 0,
+    take: 24,
+  }
+  if (searchParams?.category) {
+    params.categoryId = searchParams.category
+  }
 
-  const url = `/api/products?${params.toString()}`
-  console.log('ProductsPage: Fetching products from', url)
+  console.log('ProductsPage: Fetching products from backend with params', params)
 
-  const res = await fetch(url, { cache: 'no-store' })
-  console.log('ProductsPage: Response status', res.status)
+  let data: any = { products: [], total: 0, filters: { categories: [] } }
+  try {
+    const res: any = await apiClient.getProducts(params)
+    data = {
+      products: res?.products || [],
+      total: res?.total || 0,
+      // Backend may not yet return filters/categories; default to empty array
+      filters: (res as any).filters || { categories: [] },
+    }
+  } catch (error) {
+    console.error('ProductsPage: Error fetching products from backend', error)
+  }
 
-  const data = res.ok ? await res.json() : { products: [], filters: { categories: [] } }
   console.log('ProductsPage: Data summary', {
     hasProducts: !!data?.products,
     count: data?.products?.length || 0,
-    keys: data ? Object.keys(data) : [],
+    total: data?.total,
   })
 
   const products = data.products || []
