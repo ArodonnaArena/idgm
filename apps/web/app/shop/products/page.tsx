@@ -1,12 +1,14 @@
 import Link from 'next/link'
 import { ShoppingCartIcon, StarIcon, TagIcon, FireIcon } from '@heroicons/react/24/outline'
 import ProductCard from '../../../components/ProductCard'
-import { apiUrl } from '../../../lib/api'
 
 export const metadata = {
   title: 'Shop Products - IDGM Universal Limited',
   description: 'Browse our collection of premium agricultural products and kitchenware.',
 }
+
+// Force this page to always render dynamically so it fetches fresh products
+export const dynamic = 'force-dynamic'
 
 function categoryImage(slug?: string, name?: string) {
   const key = (slug || name || '').toLowerCase()
@@ -32,8 +34,18 @@ export default async function ProductsPage({ searchParams }: { searchParams: { c
   const params = new URLSearchParams({ limit: '24' })
   if (searchParams?.category) params.set('category', searchParams.category)
 
-  const res = await fetch(apiUrl(`/api/products?${params.toString()}`), { cache: 'no-store' })
+  const url = `/api/products?${params.toString()}`
+  console.log('ProductsPage: Fetching products from', url)
+
+  const res = await fetch(url, { cache: 'no-store' })
+  console.log('ProductsPage: Response status', res.status)
+
   const data = res.ok ? await res.json() : { products: [], filters: { categories: [] } }
+  console.log('ProductsPage: Data summary', {
+    hasProducts: !!data?.products,
+    count: data?.products?.length || 0,
+    keys: data ? Object.keys(data) : [],
+  })
 
   const products = data.products || []
   const categories = data.filters?.categories || []
