@@ -19,6 +19,7 @@ import {
 import { HeartIcon as HeartIconSolid, StarIcon as StarIconSolid } from '@heroicons/react/24/solid'
 import { apiUrl } from '../../../../lib/api'
 import { Price } from '../../../../components/Currency'
+import { normalizeImageUrl } from '../../../../lib/images'
 
 interface Product {
   id: string
@@ -223,7 +224,7 @@ export default function ProductDetailPage() {
               {product.images && product.images.length > 0 ? (
                 <>
                   <img
-                    src={product.images[selectedImage]?.url || '/placeholder.jpg'}
+                    src={normalizeImageUrl(product.images[selectedImage]?.url) || '/placeholder.jpg'}
                     alt={product.images[selectedImage]?.alt || product.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                   />
@@ -273,7 +274,7 @@ export default function ProductDetailPage() {
                     }`}
                   >
                     <img
-                      src={image.url}
+                      src={normalizeImageUrl(image.url)}
                       alt={image.alt || product.name}
                       className="w-full h-full object-cover"
                     />

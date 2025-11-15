@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { StarIcon, FireIcon, ShoppingCartIcon, HeartIcon } from '@heroicons/react/24/outline'
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid'
 import { apiUrl } from '../lib/api'
+import { normalizeImageUrl } from '../lib/images'
 
 interface ProductCardProps {
   product: any
@@ -107,7 +108,7 @@ const res = await fetch(apiUrl('/api/wishlist'), {
       <Link href={`/shop/${product.slug}`}>
         <div className="relative">
           <img
-            src={product.images[0]?.url || 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop'}
+            src={normalizeImageUrl(product.images[0]?.url) || 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop'}
             alt={product.images[0]?.alt || product.name}
             className="h-40 md:h-48 w-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
