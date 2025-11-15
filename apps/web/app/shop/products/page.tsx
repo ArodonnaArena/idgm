@@ -66,6 +66,12 @@ export default async function ProductsPage({ searchParams }: { searchParams: { c
 
   return (
     <div className="bg-white">
+      {/* TEMP DEBUG: remove after verification */}
+      <div className="container mx-auto px-4 py-2 text-xs text-red-600">
+        <div>DEBUG products.length: {products.length}</div>
+        <div>DEBUG total: {data.total}</div>
+      </div>
+
       {/* Jumia-inspired Hero section */}
       <section className="bg-orange-500 text-white">
         <div className="container mx-auto px-4 md:px-8 py-16">
