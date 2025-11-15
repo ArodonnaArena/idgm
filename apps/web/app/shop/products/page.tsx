@@ -55,9 +55,25 @@ export default async function ProductsPage({ searchParams }: { searchParams: { c
   try {
     const res = await fetch(endpoint, { cache: 'no-store' })
     const json: any = await res.json()
+
+    // Normalize images so ProductCard always gets an array of objects with { url, alt }
+    const normalizedProducts = (json?.products || []).map((p: any) => ({
+      ...p,
+      images: (p.images || []).map((img: any) => {
+        if (!img) return img
+        if (typeof img === 'string') {
+          return { url: img, alt: p.name }
+        }
+        if (!img.url && img.path) {
+          return { url: img.path, alt: img.alt || p.name }
+        }
+        return img
+      }),
+    }))
+
     data = {
-      products: json?.products || [],
-      total: json?.total || (json?.products?.length ?? 0),
+      products: normalizedProducts,
+      total: json?.total || (normalizedProducts.length ?? 0),
       // Backend may not yet return filters/categories; default to empty array
       filters: json?.filters || { categories: [] },
     }
