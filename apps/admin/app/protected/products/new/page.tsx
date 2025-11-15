@@ -61,7 +61,7 @@ export default function NewProductPage() {
       setLoading(true)
       setError("")
       await api.products.create({ name, slug, sku, price: Number(price), categoryId, description, isActive, images })
-      window.location.href = "/products"
+      window.location.href = "/protected/products"
     } catch (e: any) {
       setError(e.message || "Failed to create product")
     } finally {
