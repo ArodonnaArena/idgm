@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import { ShoppingCartIcon, StarIcon, TagIcon, FireIcon } from '@heroicons/react/24/outline'
 import ProductCard from '../../../components/ProductCard'
-import { apiClient } from '../../../lib/api-client'
 
 export const metadata = {
   title: 'Shop Products - IDGM Universal Limited',
@@ -40,16 +39,27 @@ export default async function ProductsPage({ searchParams }: { searchParams: { c
     params.categoryId = searchParams.category
   }
 
-  console.log('ProductsPage: Fetching products from backend with params', params)
+  // Directly call the Render backend so we are sure we hit the live products API
+  const backendBase = 'https://idgm-backend.onrender.com'
+  const query = new URLSearchParams()
+  query.set('skip', params.skip.toString())
+  query.set('take', params.take.toString())
+  if (params.search) query.set('search', params.search)
+  if (params.categoryId) query.set('categoryId', params.categoryId)
+
+  const endpoint = `${backendBase}/api/products?${query.toString()}`
+
+  console.log('ProductsPage: Fetching products from backend endpoint', endpoint)
 
   let data: any = { products: [], total: 0, filters: { categories: [] } }
   try {
-    const res: any = await apiClient.getProducts(params)
+    const res = await fetch(endpoint, { cache: 'no-store' })
+    const json: any = await res.json()
     data = {
-      products: res?.products || [],
-      total: res?.total || 0,
+      products: json?.products || [],
+      total: json?.total || (json?.products?.length ?? 0),
       // Backend may not yet return filters/categories; default to empty array
-      filters: (res as any).filters || { categories: [] },
+      filters: json?.filters || { categories: [] },
     }
   } catch (error) {
     console.error('ProductsPage: Error fetching products from backend', error)
@@ -59,6 +69,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: { c
     hasProducts: !!data?.products,
     count: data?.products?.length || 0,
     total: data?.total,
+    endpoint,
   })
 
   const products = data.products || []
@@ -155,6 +166,9 @@ export default async function ProductsPage({ searchParams }: { searchParams: { c
           <div className="mb-4 rounded border border-red-200 bg-red-50 px-4 py-2 text-xs text-red-800">
             <p>
               Debug: products.length = {products.length}, total = {data.total}
+            </p>
+            <p className="mt-1 break-all">
+              Endpoint: {endpoint}
             </p>
           </div>
 
