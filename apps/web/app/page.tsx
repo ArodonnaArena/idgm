@@ -25,6 +25,7 @@ import {
 import FlashSaleCountdown from '../components/FlashSaleCountdown'
 import { apiUrl } from '../lib/api'
 import { Price } from '../components/Currency'
+import ProductCard from '../components/ProductCard'
 
 function AddToCartButton({ productId }: { productId: number }) {
   const [adding, setAdding] = useState(false)
@@ -73,7 +74,7 @@ const res = await fetch(apiUrl('/api/cart'), {
 // Dynamic data interface
 interface HomepageData {
   featuredProducts: Array<{
-    id: number
+    id: string
     name: string
     slug: string
     price: number
@@ -388,6 +389,26 @@ const response = await fetch(apiUrl('/api/homepage'))
             </div>
           </div>
         </div>
+
+        {/* Featured products from backend */}
+        {homepageData.featuredProducts && homepageData.featuredProducts.length > 0 && (
+          <div className="container mx-auto px-4 md:px-8 pt-12">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-3xl font-black text-gray-800">Featured Products</h2>
+              <Link
+                href="/shop/products"
+                className="text-sm font-semibold text-orange-600 hover:text-orange-700"
+              >
+                View all
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+              {homepageData.featuredProducts.slice(0, 4).map((product, index) => (
+                <ProductCard key={product.id} product={product} index={index} />
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Featured categories - Jumia style */}
         <div className="container mx-auto px-4 md:px-8 py-16">
