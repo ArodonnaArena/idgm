@@ -31,7 +31,9 @@ function categoryImage(slug?: string, name?: string) {
   return 'https://images.unsplash.com/photo-1498575207490-3e4e0c5a2be1?q=80&w=1200&auto=format&fit=crop'
 }
 
-export default async function ProductsPage({ searchParams }: { searchParams: { category?: string } }) {
+export default async function ProductsPage({ searchParams }: { searchParams: { category?: string; debug?: string } }) {
+  const debug = searchParams?.debug === '1'
+
   const params: { skip: number; take: number; search?: string; categoryId?: string } = {
     skip: 0,
     take: 24,
@@ -152,6 +154,14 @@ export default async function ProductsPage({ searchParams }: { searchParams: { c
       {/* Products grid - Jumia style */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4 md:px-8">
+          {debug && (
+            <div className="mb-4 rounded border border-red-200 bg-red-50 px-4 py-2 text-xs text-red-800">
+              <p>
+                Debug: products.length = {products.length}, total = {data.total}
+              </p>
+            </div>
+          )}
+
           <div className="mb-12">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-3xl font-black text-gray-800">Featured Products</h2>
