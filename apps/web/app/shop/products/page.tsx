@@ -66,10 +66,11 @@ export default async function ProductsPage({ searchParams }: { searchParams: { c
 
   return (
     <div className="bg-white">
-      {/* TEMP DEBUG: remove after verification */}
-      <div className="container mx-auto px-4 py-2 text-xs text-red-600">
-        <div>DEBUG products.length: {products.length}</div>
-        <div>DEBUG total: {data.total}</div>
+      {/* TEMP DEBUG: remove after verification - fixed banner at top */}
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999, background: 'red', color: 'white', padding: '20px', fontSize: '24px', fontWeight: 'bold', textAlign: 'center' }}>
+        <div>🔍 DEBUG products.length: {products.length}</div>
+        <div>🔍 DEBUG total: {data.total}</div>
+        <div>🔍 DEBUG hasProducts: {data.products ? 'YES' : 'NO'}</div>
       </div>
 
       {/* Jumia-inspired Hero section */}
