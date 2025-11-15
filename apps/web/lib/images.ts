@@ -1,3 +1,5 @@
+const BACKEND_ORIGIN = 'https://idgm-backend.onrender.com'
+
 export function normalizeImageUrl(url?: string | null): string {
   if (!url) return ''
 
@@ -6,26 +8,23 @@ export function normalizeImageUrl(url?: string | null): string {
     return url
   }
 
-  // If it's an http URL (likely localhost from backend), swap the origin to NEXT_PUBLIC_BACKEND_URL
+  // If it's an http/https URL from localhost or the backend host, normalize to the backend origin
   if (url.startsWith('http://') || url.startsWith('https://')) {
     try {
-      const backendBase = (process.env.NEXT_PUBLIC_BACKEND_URL || '').replace(/\/$/, '')
-      if (!backendBase) return url
-
       const original = new URL(url)
+      const host = original.hostname
       const pathAndQuery = original.pathname + original.search
-      return `${backendBase}${pathAndQuery}`
+      if (host === 'localhost' || host === '127.0.0.1' || host === 'idgm-backend.onrender.com') {
+        return `${BACKEND_ORIGIN}${pathAndQuery}`
+      }
+      // For other hosts (e.g. Unsplash) keep as-is
+      return url
     } catch {
       return url
     }
   }
 
-  // Relative path like /uploads/xyz.jpg – prefix with backend URL if available
-  const backendBase = (process.env.NEXT_PUBLIC_BACKEND_URL || '').replace(/\/$/, '')
-  if (backendBase) {
-    const path = url.startsWith('/') ? url : `/${url}`
-    return `${backendBase}${path}`
-  }
-
-  return url
+  // Relative path like /uploads/xyz.jpg – prefix with backend origin
+  const path = url.startsWith('/') ? url : `/${url}`
+  return `${BACKEND_ORIGIN}${path}`
 }
