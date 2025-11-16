@@ -15,9 +15,21 @@ function slugify(s: string) {
 async function uploadImage(file: File): Promise<string> {
   const form = new FormData()
   form.append("file", file)
+  
+  // Log the upload attempt for debugging
+  console.log('[Product Create] Uploading image to:', `${API_BASE}/upload/image`, 'File size:', file.size)
+  
   const res = await fetch(`${API_BASE}/upload/image`, { method: "POST", body: form })
-  if (!res.ok) throw new Error("Upload failed")
+  
+  if (!res.ok) {
+    console.error('[Product Create] Upload failed. Status:', res.status, 'StatusText:', res.statusText)
+    const errorBody = await res.text()
+    console.error('[Product Create] Error body:', errorBody)
+    throw new Error(`Upload failed: ${res.status} ${res.statusText}`)
+  }
+  
   const data = await res.json()
+  console.log('[Product Create] Upload succeeded. URL:', data.url)
   return data.url as string
 }
 
@@ -48,10 +60,15 @@ export default function NewProductPage() {
     const file = e.target.files?.[0]
     if (!file) return
     try {
+      console.log('[Product Create] File selected:', file.name, 'Size:', file.size)
       const url = await uploadImage(file)
       setImages((prev) => [...prev, { url }])
+      console.log('[Product Create] Image added to form. Total images:', images.length + 1)
     } catch (e: any) {
-      alert(e.message || "Image upload failed")
+      console.error('[Product Create] Upload error:', e)
+      const errorMsg = e.message || "Image upload failed"
+      alert(errorMsg)
+      setError(errorMsg)
     }
   }
 
@@ -60,9 +77,13 @@ export default function NewProductPage() {
     try {
       setLoading(true)
       setError("")
+      console.log('[Product Create] Submitting product:', { name, slug, sku, price, categoryId, images: images.length })
+      console.log('[Product Create] Images being sent:', images)
       await api.products.create({ name, slug, sku, price: Number(price), categoryId, description, isActive, images })
+      console.log('[Product Create] Product created successfully')
       window.location.href = "/protected/products"
     } catch (e: any) {
+      console.error('[Product Create] Error creating product:', e)
       let message = e?.message || "Failed to create product"
       const data = e?.data
       if (data) {
@@ -76,6 +97,7 @@ export default function NewProductPage() {
           message += `: ${data.error}`
         }
       }
+      console.error('[Product Create] Final error message:', message)
       setError(message)
     } finally {
       setLoading(false)
