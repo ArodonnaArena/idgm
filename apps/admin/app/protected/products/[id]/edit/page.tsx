@@ -105,7 +105,20 @@ export default function EditProductPage() {
       })
       window.location.href = "/protected/products"
     } catch (e: any) {
-      setError(e.message || "Failed to update product")
+      let message = e?.message || "Failed to update product"
+      const data = e?.data
+      if (data) {
+        if (typeof data === "string") {
+          message += `: ${data}`
+        } else if (Array.isArray(data?.message)) {
+          message += `: ${data.message.join(", ")}`
+        } else if (data?.message) {
+          message += `: ${data.message}`
+        } else if (data?.error) {
+          message += `: ${data.error}`
+        }
+      }
+      setError(message)
     } finally {
       setSaving(false)
     }

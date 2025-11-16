@@ -63,7 +63,20 @@ export default function NewProductPage() {
       await api.products.create({ name, slug, sku, price: Number(price), categoryId, description, isActive, images })
       window.location.href = "/protected/products"
     } catch (e: any) {
-      setError(e.message || "Failed to create product")
+      let message = e?.message || "Failed to create product"
+      const data = e?.data
+      if (data) {
+        if (typeof data === "string") {
+          message += `: ${data}`
+        } else if (Array.isArray(data?.message)) {
+          message += `: ${data.message.join(", ")}`
+        } else if (data?.message) {
+          message += `: ${data.message}`
+        } else if (data?.error) {
+          message += `: ${data.error}`
+        }
+      }
+      setError(message)
     } finally {
       setLoading(false)
     }
