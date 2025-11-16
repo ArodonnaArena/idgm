@@ -18,6 +18,8 @@ interface CartContextType {
   removeItem: (productId: string) => void
   updateQuantity: (productId: string, quantity: number) => void
   clearCart: () => void
+  /** Re-sync cart from backend /api/cart for the logged-in user */
+  syncFromBackend: () => Promise<void>
   total: number
   itemCount: number
 }
@@ -27,6 +29,28 @@ const CartContext = createContext<CartContextType | undefined>(undefined)
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
   const [isLoaded, setIsLoaded] = useState(false)
+
+  const syncFromBackend = async () => {
+    try {
+      const res = await fetch('/api/cart', { credentials: 'include' })
+      if (!res.ok) return
+      const cart: any = await res.json()
+      if (!cart || !Array.isArray(cart.items)) return
+
+      const mapped: CartItem[] = cart.items.map((ci: any) => ({
+        id: ci.id,
+        productId: ci.productId,
+        name: ci.product?.name ?? 'Product',
+        price: ci.price,
+        quantity: ci.quantity,
+        image: ci.product?.images?.[0]?.url,
+        slug: ci.product?.slug,
+      }))
+      setItems(mapped)
+    } catch (error) {
+      console.error('Error syncing cart from backend:', error)
+    }
+  }
 
   // Load cart from localStorage on mount
   useEffect(() => {
@@ -98,6 +122,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         removeItem,
         updateQuantity,
         clearCart,
+        syncFromBackend,
         total,
         itemCount,
       }}

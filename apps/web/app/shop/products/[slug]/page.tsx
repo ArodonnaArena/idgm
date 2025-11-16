@@ -20,6 +20,7 @@ import { HeartIcon as HeartIconSolid, StarIcon as StarIconSolid } from '@heroico
 import { apiUrl } from '../../../../lib/api'
 import { Price } from '../../../../components/Currency'
 import { normalizeImageUrl } from '../../../../lib/images'
+import { useCart } from '../../../../contexts/CartContext'
 
 interface Product {
   id: string
@@ -40,6 +41,7 @@ export default function ProductDetailPage() {
   const params = useParams()
   const router = useRouter()
   const { data: session } = useSession()
+  const { syncFromBackend } = useCart()
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedImage, setSelectedImage] = useState(0)
@@ -90,6 +92,8 @@ export default function ProductDetailPage() {
       })
       
       if (res.ok) {
+        // Keep frontend cart in sync with backend cart response
+        await syncFromBackend()
         setCartMessage('✓ Added to cart successfully!')
         setTimeout(() => setCartMessage(''), 3000)
       } else {
