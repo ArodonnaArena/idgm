@@ -93,6 +93,8 @@ export default function EditProductPage() {
     try {
       setSaving(true)
       setError("")
+      // Backend currently does not accept an `images` field on update ("property images should not exist"),
+      // so we only update the basic product fields here.
       await api.products.update(productId, {
         name,
         slug,
@@ -101,7 +103,6 @@ export default function EditProductPage() {
         categoryId,
         description,
         isActive,
-        images,
       })
       window.location.href = "/protected/products"
     } catch (e: any) {
