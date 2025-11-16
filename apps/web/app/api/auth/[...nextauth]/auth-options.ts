@@ -24,11 +24,18 @@ export const authOptions: NextAuthOptions = {
 
           // Backend should return user data and token
           if (response && response.user) {
+            const accessToken =
+              response.accessToken ||
+              response.access_token ||
+              response.token ||
+              response?.data?.accessToken ||
+              null
+
             return {
               id: response.user.id,
               email: response.user.email,
               name: response.user.name,
-              accessToken: response.access_token || response.token,
+              accessToken,
               roles: response.user.roles || [],
             } as any
           }
