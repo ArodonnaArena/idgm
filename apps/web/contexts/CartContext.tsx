@@ -15,8 +15,10 @@ interface CartItem {
 interface CartContextType {
   items: CartItem[]
   addItem: (item: Omit<CartItem, 'quantity'> & { quantity?: number }) => void
-  removeItem: (productId: string) => void
-  updateQuantity: (productId: string, quantity: number) => void
+  /** Remove an item from the cart by its cart item ID (not productId) and sync backend */
+  removeItem: (itemId: string) => Promise<void>
+  /** Update quantity for a cart item ID and sync backend */
+  updateQuantity: (itemId: string, quantity: number) => Promise<void>
   clearCart: () => void
   /** Re-sync cart from backend /api/cart for the logged-in user */
   syncFromBackend: () => Promise<void>
@@ -90,21 +92,37 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     })
   }
 
-  const removeItem = (productId: string) => {
-    setItems((prevItems) => prevItems.filter((item) => item.productId !== productId))
+  const removeItem = async (itemId: string) => {
+    try {
+      await fetch(`/api/cart?itemId=${encodeURIComponent(itemId)}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      })
+    } catch (error) {
+      console.error('Error removing cart item:', error)
+    } finally {
+      await syncFromBackend()
+    }
   }
 
-  const updateQuantity = (productId: string, quantity: number) => {
+  const updateQuantity = async (itemId: string, quantity: number) => {
     if (quantity <= 0) {
-      removeItem(productId)
+      await removeItem(itemId)
       return
     }
 
-    setItems((prevItems) =>
-      prevItems.map((item) =>
-        item.productId === productId ? { ...item, quantity } : item
-      )
-    )
+    try {
+      await fetch('/api/cart', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ itemId, quantity }),
+      })
+    } catch (error) {
+      console.error('Error updating cart quantity:', error)
+    } finally {
+      await syncFromBackend()
+    }
   }
 
   const clearCart = () => {
