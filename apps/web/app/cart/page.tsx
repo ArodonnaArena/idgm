@@ -18,7 +18,8 @@ import { useCart } from '../../contexts/CartContext'
 import { Price } from '../../components/Currency'
 
 export default function CartPage() {
-  const { items, updateQuantity, removeItem, total: cartTotal, syncFromBacke  const [promoCode, setPromoCode] = useState('')
+  const { items, updateQuantity, removeItem, total: cartTotal, syncFromBackend } = useCart()
+  const [promoCode, setPromoCode] = useState('')
   const [promoApplied, setPromoApplied] = useState(false)
   const [promoDiscount, setPromoDiscount] = useState(0)
 
