@@ -30,7 +30,10 @@ async function uploadImage(file: File): Promise<string> {
   
   const data = await res.json()
   console.log('[Product Create] Upload succeeded. URL:', data.url)
-  return data.url as string
+  // Normalize to HTTPS to avoid mixed-content issues if backend returned http://
+  const returnedUrl = (data.url as string) || ''
+  const normalizedUrl = returnedUrl.replace(/^http:\/\/(.*)$/i, 'https://$1')
+  return normalizedUrl
 }
 
 export default function NewProductPage() {

@@ -2,7 +2,7 @@ import NextAuth from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
 import { apiClient } from '../../../../lib/api-client'
 
-const handler = NextAuth({
+export const authOptions = {
   session: { strategy: 'jwt' },
   pages: { signIn: '/login' },
   providers: [
@@ -63,6 +63,8 @@ const handler = NextAuth({
       return session
     },
   },
-})
+}
+
+const handler = NextAuth(authOptions)
 
 export { handler as GET, handler as POST }
