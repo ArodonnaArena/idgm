@@ -8,7 +8,7 @@ try {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  transpilePackages: ['@prisma/client'],
+  transpilePackages: ['@prisma/client', '@idgm/lib'],
   experimental: {
     // Server actions are now stable and enabled by default
   },
