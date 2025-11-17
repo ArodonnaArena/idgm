@@ -95,6 +95,7 @@ export default function EditProductPage() {
     try {
       setSaving(true)
       setError("")
+      console.log('[EditProduct] Submitting update', { productId, imagesCount: images.length, hasFreeShipping })
       await api.products.update(productId, {
         name,
         slug,
