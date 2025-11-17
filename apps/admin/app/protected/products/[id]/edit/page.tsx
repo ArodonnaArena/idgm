@@ -34,6 +34,8 @@ export default function EditProductPage() {
   const [description, setDescription] = useState("")
   const [isActive, setIsActive] = useState(true)
   const [hasFreeShipping, setHasFreeShipping] = useState(false)
+  const [stock, setStock] = useState(0)
+  const [threshold, setThreshold] = useState(0)
   const [images, setImages] = useState<{ url: string; alt?: string }[]>([])
   const [categories, setCategories] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -62,6 +64,8 @@ export default function EditProductPage() {
         setDescription(p.description || "")
         setIsActive(p.isActive ?? true)
         setHasFreeShipping(p.hasFreeShipping ?? false)
+        setStock(p.inventory?.quantity ?? 0)
+        setThreshold(p.inventory?.threshold ?? 0)
         setImages((p.images || []).map((img: any) => ({ url: img.url, alt: img.alt })))
       } catch (e: any) {
         setError(e.message || "Failed to load product")
@@ -106,6 +110,10 @@ export default function EditProductPage() {
         isActive,
         hasFreeShipping,
         images,
+        inventory: {
+          quantity: stock,
+          threshold,
+        },
       })
       window.location.href = "/protected/products"
     } catch (e: any) {
@@ -173,6 +181,27 @@ export default function EditProductPage() {
               onChange={(e) => setPrice(Number(e.target.value))}
               min={0}
               required
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-700">Stock (quantity)</label>
+            <input
+              type="number"
+              className="mt-1 w-full rounded border px-3 py-2 text-sm"
+              value={stock}
+              min={0}
+              onChange={(e) => setStock(Number(e.target.value))}
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-700">Low-stock threshold</label>
+            <input
+              type="number"
+              className="mt-1 w-full rounded border px-3 py-2 text-sm"
+              value={threshold}
+              min={0}
+              onChange={(e) => setThreshold(Number(e.target.value))}
             />
           </div>
           <div>

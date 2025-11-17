@@ -21,6 +21,8 @@ export default function ProductCard({ product, index }: ProductCardProps) {
   const [isWishlisted, setIsWishlisted] = useState(false)
   const [message, setMessage] = useState('')
 
+  const inStock = product.inventory ? product.inventory.quantity > 0 : true
+
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
@@ -140,10 +142,15 @@ const res = await fetch(apiUrl('/api/wishlist'), {
             </div>
           )}
           
-          {/* Low stock indicator */}
-          {product.inventory && product.inventory.quantity <= product.inventory.threshold && (
+          {/* Low stock / out of stock indicator */}
+          {product.inventory && product.inventory.quantity <= product.inventory.threshold && product.inventory.quantity > 0 && (
             <div className="absolute bottom-2 left-2 bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded-full">
               Only {product.inventory.quantity} left
+            </div>
+          )}
+          {product.inventory && product.inventory.quantity === 0 && (
+            <div className="absolute bottom-2 left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full">
+              Out of stock
             </div>
           )}
         </div>
@@ -197,7 +204,7 @@ const res = await fetch(apiUrl('/api/wishlist'), {
         )}
         <button
           onClick={handleAddToCart}
-          disabled={adding}
+          disabled={adding || !inStock}
           className="w-full bg-orange-500 text-white text-xs px-3 py-2 rounded-md hover:bg-orange-600 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {adding ? (
@@ -208,7 +215,7 @@ const res = await fetch(apiUrl('/api/wishlist'), {
           ) : (
             <>
               <ShoppingCartIcon className="w-4 h-4" />
-              Add to Cart
+              <span>{inStock ? 'Add to Cart' : 'Out of Stock'}</span>
             </>
           )}
         </button>

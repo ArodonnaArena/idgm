@@ -44,6 +44,8 @@ export default function NewProductPage() {
   const [categoryId, setCategoryId] = useState("")
   const [description, setDescription] = useState("")
   const [isActive, setIsActive] = useState(true)
+  const [stock, setStock] = useState(0)
+  const [threshold, setThreshold] = useState(0)
   const [images, setImages] = useState<{ url: string; alt?: string }[]>([])
   const [categories, setCategories] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
@@ -80,9 +82,22 @@ export default function NewProductPage() {
     try {
       setLoading(true)
       setError("")
-      console.log('[Product Create] Submitting product:', { name, slug, sku, price, categoryId, images: images.length })
+      console.log('[Product Create] Submitting product:', { name, slug, sku, price, categoryId, stock, threshold, images: images.length })
       console.log('[Product Create] Images being sent:', images)
-      await api.products.create({ name, slug, sku, price: Number(price), categoryId, description, isActive, images })
+      await api.products.create({
+        name,
+        slug,
+        sku,
+        price: Number(price),
+        categoryId,
+        description,
+        isActive,
+        images,
+        inventory: {
+          quantity: stock,
+          threshold,
+        },
+      })
       console.log('[Product Create] Product created successfully')
       window.location.href = "/protected/products"
     } catch (e: any) {
@@ -127,6 +142,27 @@ export default function NewProductPage() {
           <div>
             <label className="block text-sm text-gray-700">Price (NGN)</label>
             <input type="number" className="mt-1 w-full rounded border px-3 py-2 text-sm" value={price} onChange={(e) => setPrice(Number(e.target.value))} min={0} required />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-700">Stock (quantity)</label>
+            <input
+              type="number"
+              className="mt-1 w-full rounded border px-3 py-2 text-sm"
+              value={stock}
+              min={0}
+              onChange={(e) => setStock(Number(e.target.value))}
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-700">Low-stock threshold</label>
+            <input
+              type="number"
+              className="mt-1 w-full rounded border px-3 py-2 text-sm"
+              value={threshold}
+              min={0}
+              onChange={(e) => setThreshold(Number(e.target.value))}
+            />
           </div>
           <div>
             <label className="block text-sm text-gray-700">Category</label>
