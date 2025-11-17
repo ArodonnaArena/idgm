@@ -33,6 +33,7 @@ export default function EditProductPage() {
   const [categoryId, setCategoryId] = useState("")
   const [description, setDescription] = useState("")
   const [isActive, setIsActive] = useState(true)
+  const [hasFreeShipping, setHasFreeShipping] = useState(false)
   const [images, setImages] = useState<{ url: string; alt?: string }[]>([])
   const [categories, setCategories] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -60,6 +61,7 @@ export default function EditProductPage() {
         setCategoryId(p.categoryId || "")
         setDescription(p.description || "")
         setIsActive(p.isActive ?? true)
+        setHasFreeShipping(p.hasFreeShipping ?? false)
         setImages((p.images || []).map((img: any) => ({ url: img.url, alt: img.alt })))
       } catch (e: any) {
         setError(e.message || "Failed to load product")
@@ -93,8 +95,6 @@ export default function EditProductPage() {
     try {
       setSaving(true)
       setError("")
-      // Backend currently does not accept an `images` field on update ("property images should not exist"),
-      // so we only update the basic product fields here.
       await api.products.update(productId, {
         name,
         slug,
@@ -103,6 +103,8 @@ export default function EditProductPage() {
         categoryId,
         description,
         isActive,
+        hasFreeShipping,
+        images,
       })
       window.location.href = "/protected/products"
     } catch (e: any) {
@@ -194,7 +196,16 @@ export default function EditProductPage() {
               type="checkbox"
               checked={isActive}
               onChange={(e) => setIsActive(e.target.checked)}
-              className="mt-2"
+              className="mt-2 mr-2"
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-700">Free Shipping</label>
+            <input
+              type="checkbox"
+              checked={hasFreeShipping}
+              onChange={(e) => setHasFreeShipping(e.target.checked)}
+              className="mt-2 mr-2"
             />
           </div>
         </div>
