@@ -143,6 +143,18 @@ model Product {
   images       ProductImage[]
   inventory    Inventory?
   attributes   Json?
+  /// Delivery-related fields for shipping calculations
+  /// grossWeightKg: physical weight per unit in kilograms
+  /// lengthCm/widthCm/heightCm: package dimensions in centimeters
+  /// maxDimensionCm: precomputed max dimension (optional optimisation)
+  /// isBulky: manual flag for unusually large/awkward items
+  grossWeightKg  Float?
+  lengthCm       Float?
+  widthCm        Float?
+  heightCm       Float?
+  maxDimensionCm Float?
+  isBulky        Boolean?      @default(false)
+
   isActive     Boolean        @default(true)
   cartItems    CartItem[]
   orderItems   OrderItem[]
@@ -242,6 +254,13 @@ model Address {
   state           String
   country         String   @default("NG")
   postcode        String?
+  /// Optional geo and LGA-like metadata to support delivery rules.
+  /// lga: textual LGA name (can reuse city if needed).
+  /// lat/lng: approximate coordinates for geo-fence checks.
+  lga             String?
+  lat             Float?
+  lng             Float?
+
   shippingOrders  Order[]  @relation("OrderShipping")
   billingOrders   Order[]  @relation("OrderBilling")
 }

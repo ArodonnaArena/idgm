@@ -22,6 +22,7 @@ interface CartContextType {
   clearCart: () => void
   /** Re-sync cart from backend /api/cart for the logged-in user */
   syncFromBackend: () => Promise<void>
+  /** Subtotal of items only (no delivery) */
   total: number
   itemCount: number
 }
@@ -31,6 +32,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined)
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
   const [isLoaded, setIsLoaded] = useState(false)
+  const [pendingItemId, setPendingItemId] = useState<string | null>(null)
 
   const syncFromBackend = async () => {
     try {
@@ -93,6 +95,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }
 
   const removeItem = async (itemId: string) => {
+    setPendingItemId(itemId)
     try {
       await fetch(`/api/cart?itemId=${encodeURIComponent(itemId)}`, {
         method: 'DELETE',
@@ -102,10 +105,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       console.error('Error removing cart item:', error)
     } finally {
       await syncFromBackend()
+      setPendingItemId(null)
     }
   }
 
   const updateQuantity = async (itemId: string, quantity: number) => {
+    setPendingItemId(itemId)
     if (quantity <= 0) {
       await removeItem(itemId)
       return
@@ -122,6 +127,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       console.error('Error updating cart quantity:', error)
     } finally {
       await syncFromBackend()
+      setPendingItemId(null)
     }
   }
 

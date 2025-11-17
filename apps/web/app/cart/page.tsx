@@ -125,7 +125,7 @@ export default function CartPage() {
                         <div className="flex items-center space-x-3">
                           <button
                             onClick={() => updateQuantity(item.id, Number(item.quantity) - 1)}
-                            className="p-1 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+                            className="p-1 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             disabled={Number(item.quantity) <= 1}
                           >
                             <MinusIcon className="w-4 h-4" />
@@ -137,7 +137,7 @@ export default function CartPage() {
                           
                           <button
                             onClick={() => updateQuantity(item.id, Number(item.quantity) + 1)}
-                            className="p-1 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+                            className="p-1 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <PlusIcon className="w-4 h-4" />
                           </button>
