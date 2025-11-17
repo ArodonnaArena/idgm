@@ -89,8 +89,8 @@ export default function EditProductPage() {
     }
   }
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault()
+  async function onSubmit(e?: React.FormEvent) {
+    if (e) e.preventDefault()
     if (!productId) return
     try {
       setSaving(true)
@@ -234,6 +234,7 @@ export default function EditProductPage() {
         <div>
           <button
             type="submit"
+            onClick={onSubmit}
             disabled={!canSubmit || saving}
             className="rounded bg-gray-900 px-4 py-2 text-sm text-white disabled:opacity-50"
           >
