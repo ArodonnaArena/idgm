@@ -24,6 +24,10 @@ interface CartContextType {
   syncFromBackend: () => Promise<void>
   /** Subtotal of items only (no delivery) */
   total: number
+  /** Delivery fee as computed by backend */
+  deliveryFee: number
+  /** Grand total including delivery, before discounts */
+  grandTotal: number
   itemCount: number
 }
 
@@ -33,6 +37,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
   const [isLoaded, setIsLoaded] = useState(false)
   const [pendingItemId, setPendingItemId] = useState<string | null>(null)
+  const [deliveryFee, setDeliveryFee] = useState(0)
+  const [grandTotal, setGrandTotal] = useState(0)
 
   const syncFromBackend = async () => {
     try {
@@ -51,6 +57,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         slug: ci.product?.slug,
       }))
       setItems(mapped)
+      setDeliveryFee(cart.deliveryFee ?? 0)
+      setGrandTotal(cart.grandTotal ?? cart.total ?? 0)
     } catch (error) {
       console.error('Error syncing cart from backend:', error)
     }
@@ -148,6 +156,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         clearCart,
         syncFromBackend,
         total,
+        deliveryFee,
+        grandTotal,
         itemCount,
       }}
     >

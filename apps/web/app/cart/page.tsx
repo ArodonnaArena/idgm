@@ -18,10 +18,11 @@ import { useCart } from '../../contexts/CartContext'
 import { Price } from '../../components/Currency'
 
 export default function CartPage() {
-  const { items, updateQuantity, removeItem, total: cartTotal, syncFromBackend } = useCart()
+  const { items, updateQuantity, removeItem, total: cartTotal, deliveryFee, grandTotal, syncFromBackend } = useCart()
   const [promoCode, setPromoCode] = useState('')
   const [promoApplied, setPromoApplied] = useState(false)
   const [promoDiscount, setPromoDiscount] = useState(0)
+  const [promoMessage, setPromoMessage] = useState('')
 
   useEffect(() => {
     syncFromBackend()
@@ -29,16 +30,33 @@ export default function CartPage() {
 
   const subtotal = cartTotal
 
-  const deliveryFee = useMemo(() => (subtotal > 50000 ? 0 : 5000), [subtotal])
+  const effectiveDeliveryFee = deliveryFee ?? 0
   const discountAmount = useMemo(() => (promoApplied ? subtotal * (promoDiscount / 100) : 0), [promoApplied, promoDiscount, subtotal])
-  const total = useMemo(() => subtotal - discountAmount + deliveryFee, [subtotal, discountAmount, deliveryFee])
+  const total = useMemo(() => subtotal - discountAmount + effectiveDeliveryFee, [subtotal, discountAmount, effectiveDeliveryFee])
 
-  const applyPromoCode = () => {
-    if (promoCode.toLowerCase() === 'welcome10') {
-      setPromoApplied(true)
-      setPromoDiscount(10)
-    } else {
-      alert('Invalid promo code')
+  const applyPromoCode = async () => {
+    if (!promoCode.trim()) return
+    try {
+      setPromoMessage('')
+      const res = await fetch('/api/cart/apply-coupon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: promoCode.trim() }),
+      })
+      if (res.ok) {
+        setPromoApplied(true)
+        setPromoDiscount(0) // discounts now come from backend
+        setPromoMessage('Promo applied')
+        await syncFromBackend()
+      } else {
+        const data = await res.json().catch(() => ({}))
+        setPromoApplied(false)
+        setPromoDiscount(0)
+        setPromoMessage(data.error || 'Invalid promo code')
+      }
+    } catch (err) {
+      console.error('Error applying promo code', err)
+      setPromoMessage('Unable to apply promo code, please try again')
     }
   }
 
@@ -191,12 +209,16 @@ export default function CartPage() {
                     </div>
                   ) : (
                     <div className="flex items-center justify-between">
-                      <span className="text-green-600 font-medium">WELCOME10 Applied!</span>
+                      <span className={`font-medium ${promoMessage ? 'text-green-600' : 'text-gray-700'}`}>
+                        {promoMessage || 'Promo applied'}
+                      </span>
                       <button
                         onClick={() => {
                           setPromoApplied(false)
                           setPromoDiscount(0)
                           setPromoCode('')
+                          setPromoMessage('')
+                          syncFromBackend()
                         }}
                         className="text-red-500 hover:text-red-600 text-sm"
                       >
@@ -213,17 +235,17 @@ export default function CartPage() {
 <span className="font-semibold"><Price amount={subtotal} /></span>
                   </div>
                   
-                  {promoApplied && (
+                  {promoApplied && discountAmount > 0 && (
                     <div className="flex justify-between text-green-600">
                       <span>Discount ({promoDiscount}%)</span>
-                      <span>-?{discountAmount.toLocaleString()}</span>
+                      <span>-₦{discountAmount.toLocaleString()}</span>
                     </div>
                   )}
                   
                   <div className="flex justify-between">
                     <span className="text-gray-600">Delivery</span>
-                    <span className={deliveryFee === 0 ? 'text-green-600 font-medium' : 'font-semibold'}>
-{deliveryFee === 0 ? 'FREE' : <Price amount={deliveryFee} />}
+                    <span className={effectiveDeliveryFee === 0 ? 'text-green-600 font-medium' : 'font-semibold'}>
+{effectiveDeliveryFee === 0 ? 'FREE' : <Price amount={effectiveDeliveryFee} />}
                     </span>
                   </div>
                   
