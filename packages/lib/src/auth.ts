@@ -1,12 +1,8 @@
-import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import type { NextAuthOptions } from 'next-auth'
-import { prisma } from './prisma'
-import bcrypt from 'bcryptjs'
 import { API_BASE } from './api'
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma) as any,
   session: { strategy: 'jwt' },
   pages: { signIn: '/login' },
   debug: process.env.NODE_ENV === 'development',
@@ -56,16 +52,8 @@ export const authOptions: NextAuthOptions = {
           } catch (e) {
             console.error('Backend login failed (fetch error):', e)
           }
-          // Fallback to Prisma check if backend not reachable
-          const user = await prisma.user.findUnique({
-            where: { email: credentials.email },
-            include: { roles: { include: { role: true } } },
-          })
-          if (!user || !user.passwordHash) return null
-          const ok = await bcrypt.compare(credentials.password, user.passwordHash)
-          if (!ok) return null
-          const roles = (user.roles || []).map((r) => r.role.name)
-          return { id: user.id, email: user.email, name: user.name || undefined, roles: roles as any }
+
+          return null
         } catch (err) {
           console.error('authorize() error:', err)
           return null
@@ -78,11 +66,6 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         ;(token as any).roles = (user as any).roles || (token as any).roles || []
         ;(token as any).accessToken = (user as any).accessToken || (token as any).accessToken
-      }
-      // If token has no roles yet and we can fetch user, hydrate
-      if (!(token as any).roles && (token as any).sub) {
-        const u = await prisma.user.findUnique({ where: { id: (token as any).sub }, include: { roles: { include: { role: true } } } })
-        ;(token as any).roles = u?.roles.map(r => r.role.name) || []
       }
       return token
     },

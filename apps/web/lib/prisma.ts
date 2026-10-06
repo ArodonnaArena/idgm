@@ -1,8 +1,1 @@
-import { PrismaClient } from '@prisma/client'
-
-// Ensure single Prisma instance in dev to avoid hot-reload leaks
-const globalForPrisma = global as unknown as { prisma?: PrismaClient }
-
-export const prisma = globalForPrisma.prisma ?? new PrismaClient()
-
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+export { prisma } from '@idgm/lib'

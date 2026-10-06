@@ -1,14 +1,6 @@
-let PrismaPlugin
-try {
-  ({ PrismaPlugin } = require('@prisma/nextjs-monorepo-workaround-plugin'))
-} catch (e) {
-  // Optional in hosted builds; continue without the plugin
-  PrismaPlugin = class { apply() {} }
-}
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  transpilePackages: ['@prisma/client', '@idgm/lib'],
+  transpilePackages: ['@idgm/lib'],
   experimental: {
     // Server actions are now stable and enabled by default
   },
@@ -21,11 +13,5 @@ const nextConfig = {
       'avatars.githubusercontent.com',
     ],
   },
-  webpack: (config, { isServer }) => {
-    if (isServer) {
-      config.plugins = [...config.plugins, new PrismaPlugin()]
-    }
-    return config
-  }
 }
 module.exports = nextConfig
