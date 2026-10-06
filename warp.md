@@ -119,12 +119,10 @@ newidgmsite/
 ### Web App (apps/web)
 ```json
 {
-  "@headlessui/react": "^1.7.17",
   "@heroicons/react": "^2.0.18",
   "@next-auth/prisma-adapter": "^1.0.7",
-  "@prisma/client": "^5.17.0",
-  "@tanstack/react-query": "^5.51.1",
-  "next": "14.2.4",
+  "@prisma/client": "^5.22.0",
+  "next": "14.2.15",
   "next-auth": "^4.24.7",
   "react": "18.2.0",
   "tailwindcss": "^3.4.3",
@@ -463,7 +461,7 @@ This project uses Git. Ensure you:
 - Push schema (creates collections & indexes):
   - `npm run db:push`
 - Seed data (roles, categories, sample products, admin user):
-  - `node seed-atlas.js`
+  - `npm run db:seed`
 - Default credentials:
   - Email: `admin@idgm.com`
   - Password: `admin123`
@@ -483,7 +481,7 @@ Write routes are protected with `@UseGuards(AuthGuard('jwt'), RolesGuard)` and `
 2) From repo root:
    - `npm install`
    - `npm run db:push`
-   - `node seed-atlas.js`
+   - `npm run db:seed`
 3) Start API: `cd backend/api && npm run dev` (http://localhost:4000)
 4) Start Admin: `cd apps/admin && npm run dev` (http://localhost:3001)
 5) Sign in: `admin@idgm.com` / `admin123`
