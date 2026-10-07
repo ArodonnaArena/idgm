@@ -1,4 +1,5 @@
 ﻿import 'reflect-metadata'
+import dotenv from 'dotenv'
 import { NestFactory } from '@nestjs/core'
 import { AppModule } from './modules/app.module'
 import { ValidationPipe } from '@nestjs/common'
@@ -7,6 +8,7 @@ import * as path from 'path'
 import * as express from 'express'
 
 async function bootstrap() {
+  dotenv.config({ path: path.resolve(process.cwd(), '.env.local') })
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     cors: {
       origin: [/localhost:\d+$/, 'https://idgm-web.vercel.app', /\.vercel\.app$/],
