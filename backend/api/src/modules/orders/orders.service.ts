@@ -35,23 +35,39 @@ export class OrdersService {
     return order
   }
 
-  async create(dto: CreateOrderDto) {
-    const total = dto.items.reduce((sum, i) => sum + i.price * i.quantity, 0)
-    const order = await this.prisma.order.create({
+  async getOwned(id: string, userId: string) {
+    const order = await this.prisma.order.findUnique({
+      where: { id },
+      include: { items: { include: { product: true } }, user: true, payment: true },
+    })
+    if (!order || order.userId !== userId) throw new NotFoundException('Order not found')
+    return order
+  }
+
+  async create(dto: CreateOrderDto, userId: string) {
+    const productIds = dto.items.map((item) => item.productId)
+    const products = (await this.prisma.product.findMany({
+      where: { id: { in: productIds } },
+    })) as Array<{ id: string; price: number }>
+    const productById = new Map(products.map((product) => [product.id, product]))
+    const items = dto.items.map((item) => {
+      const product = productById.get(item.productId)
+      if (!product) throw new Error(`Unknown product ID: ${item.productId}`)
+      return { productId: item.productId, quantity: item.quantity, price: Number(product.price) }
+    })
+    const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+
+    return this.prisma.order.create({
       data: {
-        userId: dto.userId,
+        userId,
         currency: dto.currency || 'NGN',
         total,
         shippingId: dto.shippingId,
         billingId: dto.billingId,
-        items: {
-          create: dto.items.map((i) => ({ productId: i.productId, quantity: i.quantity, price: i.price })),
-        },
+        items: { create: items },
       },
       include: { items: true },
     })
-
-    return order
   }
 
   async updateStatus(id: string, dto: UpdateOrderStatusDto) {
