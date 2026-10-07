@@ -9,6 +9,8 @@ import { RolesGuard } from '../auth/roles.guard'
 export class UsersController {
   constructor(private usersService: UsersService) {}
 
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('ADMIN', 'STAFF')
   @Get()
   async findAll(
     @Query('skip') skip?: string,
@@ -20,6 +22,8 @@ export class UsersController {
     return this.usersService.findAll(skipNum, takeNum, search)
   }
 
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('ADMIN', 'STAFF')
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return this.usersService.findOne(id)
