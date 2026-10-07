@@ -1,9 +1,21 @@
 export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@idgm/lib'
 import { prisma } from '../../../../lib/prisma'
+import { adminUserUpdateSchema } from '../../../../lib/security/users.mjs'
+
+function hasRole(session: any, role: string) {
+  return Array.isArray(session?.user?.roles) && session.user.roles.includes(role)
+}
 
 export async function GET(request: NextRequest) {
   try {
+    const session = (await getServerSession(authOptions as any)) as any
+    if (!session?.user?.id || !hasRole(session, 'ADMIN')) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '20')
@@ -167,26 +179,17 @@ export async function GET(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const { userId, status, roleIds } = await request.json()
-    
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'User ID is required' },
-        { status: 400 }
-      )
+    const session = (await getServerSession(authOptions as any)) as any
+    if (!session?.user?.id || !hasRole(session, 'ADMIN')) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
+    const body = await request.json()
+    const { userId, status, roleIds } = adminUserUpdateSchema.parse(body)
     const updateData: any = {}
-    
+
     if (status) {
-      const validStatuses = ['ACTIVE', 'INACTIVE', 'SUSPENDED']
-      if (!validStatuses.includes(status.toUpperCase())) {
-        return NextResponse.json(
-          { error: 'Invalid status' },
-          { status: 400 }
-        )
-      }
-      updateData.status = status.toUpperCase()
+      updateData.status = status
     }
 
     // Update user

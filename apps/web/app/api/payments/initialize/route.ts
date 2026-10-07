@@ -1,33 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
 import { prisma } from '../../../../lib/prisma'
-import { z } from 'zod'
+import { authOptions } from '@idgm/lib'
+import {
+  calculatePaymentTotal,
+  paymentRequestSchema,
+} from '../../../../lib/security/payments.mjs'
 
-const initializePaymentSchema = z.object({
-  email: z.string().email(),
-  amount: z.number().positive(),
-  currency: z.string().default('NGN'),
-  orderId: z.string().optional(),
-  provider: z.enum(['paystack', 'flutterwave']),
-  metadata: z.object({
-    customer: z.object({
-      name: z.string(),
-      email: z.string().email(),
-      phone: z.string().optional(),
-    }),
-    order: z.object({
-      id: z.string(),
-      items: z.array(z.any()),
-    }).optional(),
-  }),
-})
-
-// Paystack integration
-async function initializePaystackPayment(data: any) {
+async function initializePaystackPayment(data: any, amount: number) {
   const paystackSecretKey = process.env.PAYSTACK_SECRET_KEY
-  
-  if (!paystackSecretKey) {
-    throw new Error('Paystack secret key not configured')
-  }
+  if (!paystackSecretKey) throw new Error('Paystack secret key not configured')
 
   const response = await fetch('https://api.paystack.co/transaction/initialize', {
     method: 'POST',
@@ -37,41 +19,31 @@ async function initializePaystackPayment(data: any) {
     },
     body: JSON.stringify({
       email: data.email,
-      amount: data.amount * 100, // Paystack expects amount in kobo
+      amount: amount * 100,
       currency: data.currency,
       reference: `IDGM-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`,
       metadata: data.metadata,
-      callback_url: `${process.env.NEXT_PUBLIC_SITE_URL}/payments/callback`,
+      callback_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/payments/callback`,
     }),
   })
 
   const result = await response.json()
-  
-  if (!response.ok) {
-    throw new Error(result.message || 'Paystack initialization failed')
-  }
+  if (!response.ok) throw new Error(result.message || 'Paystack initialization failed')
 
   return {
-    status: 'success',
     data: {
       authorization_url: result.data.authorization_url,
       access_code: result.data.access_code,
       reference: result.data.reference,
     },
-    provider: 'paystack'
   }
 }
 
-// Flutterwave integration
-async function initializeFlutterwavePayment(data: any) {
+async function initializeFlutterwavePayment(data: any, amount: number) {
   const flutterwaveSecretKey = process.env.FLUTTERWAVE_SECRET_KEY
-  
-  if (!flutterwaveSecretKey) {
-    throw new Error('Flutterwave secret key not configured')
-  }
+  if (!flutterwaveSecretKey) throw new Error('Flutterwave secret key not configured')
 
   const txRef = `IDGM-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`
-  
   const response = await fetch('https://api.flutterwave.com/v3/payments', {
     method: 'POST',
     headers: {
@@ -80,9 +52,9 @@ async function initializeFlutterwavePayment(data: any) {
     },
     body: JSON.stringify({
       tx_ref: txRef,
-      amount: data.amount,
+      amount,
       currency: data.currency,
-      redirect_url: `${process.env.NEXT_PUBLIC_SITE_URL}/payments/callback`,
+      redirect_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/payments/callback`,
       customer: {
         email: data.email,
         name: data.metadata.customer.name,
@@ -91,97 +63,77 @@ async function initializeFlutterwavePayment(data: any) {
       customizations: {
         title: 'IDGM Universal Payment',
         description: 'Payment for your order',
-        logo: `${process.env.NEXT_PUBLIC_SITE_URL}/logo.png`,
+        logo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/logo.png`,
       },
       meta: data.metadata,
     }),
   })
 
   const result = await response.json()
-  
-  if (!response.ok) {
-    throw new Error(result.message || 'Flutterwave initialization failed')
-  }
+  if (!response.ok) throw new Error(result.message || 'Flutterwave initialization failed')
 
-  return {
-    status: 'success',
-    data: {
-      link: result.data.link,
-      tx_ref: txRef,
-    },
-    provider: 'flutterwave'
-  }
+  return { data: { link: result.data.link, tx_ref: txRef } }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const validatedData = initializePaymentSchema.parse(body)
+    const session = (await getServerSession(authOptions as any)) as any
+    if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    // Create payment record
+    const body = await request.json()
+    const validatedData = paymentRequestSchema.parse(body)
+    const productIds = validatedData.items.map((item) => item.productId)
+    const products = await prisma.product.findMany({
+      where: { id: { in: productIds } },
+    })
+    const amount = calculatePaymentTotal(products, validatedData.items)
+
     const payment = await prisma.payment.create({
       data: {
-        orderId: validatedData.orderId,
-        userId: validatedData.metadata.customer.email, // Temporary - should be actual user ID
+        userId: session.user.id,
         provider: validatedData.provider.toUpperCase(),
         reference: `IDGM-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`,
-        amount: validatedData.amount,
-        currency: validatedData.currency,
+        amount,
+        currency: 'NGN',
         status: 'INITIATED',
-        raw: validatedData.metadata,
+        raw: { items: validatedData.items },
       },
     })
 
-    // Initialize payment based on provider
-    let paymentResponse
-    if (validatedData.provider === 'paystack') {
-      paymentResponse = await initializePaystackPayment(validatedData)
-    } else if (validatedData.provider === 'flutterwave') {
-      paymentResponse = await initializeFlutterwavePayment(validatedData)
-    } else {
-      return NextResponse.json(
-        { error: 'Invalid payment provider' },
-        { status: 400 }
-      )
-    }
+    const paymentResponse = validatedData.provider === 'paystack'
+      ? await initializePaystackPayment({ email: session.user.email, currency: 'NGN', metadata: {} }, amount)
+      : await initializeFlutterwavePayment({ email: session.user.email, currency: 'NGN', metadata: {} }, amount)
 
-    // Update payment record with provider reference
+    const providerReference =
+      'reference' in paymentResponse.data
+        ? paymentResponse.data.reference
+        : paymentResponse.data.tx_ref
+
     await prisma.payment.update({
       where: { id: payment.id },
       data: {
-        reference: paymentResponse.data.reference || paymentResponse.data.tx_ref || payment.reference,
-        raw: {
-          ...validatedData.metadata,
-          providerResponse: paymentResponse.data,
-        },
+        reference: providerReference || payment.reference,
+        raw: { items: validatedData.items, providerResponse: paymentResponse.data },
       },
     })
 
     return NextResponse.json({
       success: true,
+      amount,
       payment: {
         id: payment.id,
         reference: payment.reference,
         ...paymentResponse,
       },
     })
-
   } catch (error) {
     console.error('Payment initialization error:', error)
-    
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Invalid request data', details: error.errors },
-        { status: 400 }
-      )
+    if (error instanceof Error && error.message.includes('Unknown product')) {
+      return NextResponse.json({ error: error.message }, { status: 400 })
     }
-
     return NextResponse.json(
-      { 
-        error: error instanceof Error ? error.message : 'Payment initialization failed',
-        success: false
-      },
-      { status: 500 }
+      { error: error instanceof Error ? error.message : 'Payment initialization failed', success: false },
+      { status: 500 },
     )
   }
 }
