@@ -12,24 +12,16 @@ export type OrderStatus = typeof ORDER_STATUS[keyof typeof ORDER_STATUS]
 
 export class CreateOrderItemDto {
   @IsString()
-  productId: string
+  productId!: string
 
   @IsNumber()
   @Min(1)
-  quantity: number
-
-  @IsNumber()
-  @Min(0)
-  price: number
+  quantity!: number
 }
 
 export class CreateOrderDto {
-  @IsOptional()
-  @IsString()
-  userId?: string
-
   @IsArray()
-  items: CreateOrderItemDto[]
+  items!: CreateOrderItemDto[]
 
   @IsOptional()
   @IsString()
@@ -46,5 +38,5 @@ export class CreateOrderDto {
 
 export class UpdateOrderStatusDto {
   @IsEnum(ORDER_STATUS)
-  status: OrderStatus
+  status!: OrderStatus
 }
