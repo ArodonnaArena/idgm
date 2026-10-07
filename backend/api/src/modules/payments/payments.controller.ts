@@ -5,7 +5,7 @@ import axios from 'axios'
 @Controller('paystack')
 export class PaymentsController {
   private paystackSecret = process.env.PAYSTACK_SECRET_KEY || ''
-  constructor(private readonly prisma = supabase) {}
+  private readonly prisma = supabase
 
   @Post('initialize')
   async initialize(@Body() body: { email: string; amount: number; currency?: string }) {

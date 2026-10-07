@@ -2,7 +2,7 @@
   "name": "idgm-api",
   "private": true,
   "scripts": {
-    "dev": "nest start --watch",
+    "dev": "nest start --watch --entryFile backend/api/src/main",
     "start": "node dist/backend/api/src/main.js",
     "build": "nest build"
   },

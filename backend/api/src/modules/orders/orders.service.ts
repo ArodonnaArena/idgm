@@ -4,7 +4,7 @@ import { CreateOrderDto, UpdateOrderStatusDto } from './dto/order.dto'
 
 @Injectable()
 export class OrdersService {
-  constructor(private readonly prisma = supabase) {}
+  private readonly prisma = supabase
 
   async list(skip = 0, take = 50, status?: string, userId?: string) {
     const where: any = {}

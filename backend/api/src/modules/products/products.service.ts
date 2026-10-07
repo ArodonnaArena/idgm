@@ -4,7 +4,7 @@ import { CreateProductDto, UpdateProductDto } from './dto/product.dto'
 
 @Injectable()
 export class ProductsService {
-  constructor(private readonly prisma = supabase) {}
+  private readonly prisma = supabase
 
   async findAll(skip = 0, take = 50, search?: string, categoryId?: string) {
     const where: any = { isActive: true }

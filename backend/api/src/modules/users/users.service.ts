@@ -5,7 +5,7 @@ import { CreateUserDto, UpdateUserDto, AssignRolesDto } from './dto/user.dto'
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma = supabase) {}
+  private readonly prisma = supabase
 
   async findAll(skip = 0, take = 50, search?: string) {
     const where = search

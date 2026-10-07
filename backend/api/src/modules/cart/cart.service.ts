@@ -5,7 +5,7 @@ import { DEFAULT_DELIVERY_RULES, quoteDelivery } from './delivery-engine'
 
 @Injectable()
 export class CartService {
-  constructor(private readonly prisma = supabase) {}
+  private readonly prisma = supabase
 
   private async getOrCreateCart(userId: string) {
     let cart = await this.prisma.cart.findFirst({

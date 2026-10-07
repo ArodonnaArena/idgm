@@ -6,7 +6,9 @@ import { RegisterDto, LoginDto, ChangePasswordDto } from './dto/auth.dto'
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly prisma = supabase, private jwt: JwtService) {}
+  private readonly prisma = supabase
+
+  constructor(private readonly jwt: JwtService) {}
 
   async register(dto: RegisterDto) {
     const existing = await this.prisma.user.findUnique({ where: { email: dto.email } })

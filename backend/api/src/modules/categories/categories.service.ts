@@ -4,7 +4,7 @@ import { CreateCategoryDto, UpdateCategoryDto } from './dto/category.dto'
 
 @Injectable()
 export class CategoriesService {
-  constructor(private readonly prisma = supabase) {}
+  private readonly prisma = supabase
 
   async findAll() {
     return this.prisma.category.findMany({

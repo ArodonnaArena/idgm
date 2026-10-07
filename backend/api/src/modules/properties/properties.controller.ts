@@ -3,7 +3,7 @@ import { prisma as supabase } from '../../../../../packages/lib/src/prisma'
 
 @Controller('properties')
 export class PropertiesController {
-  constructor(private readonly prisma = supabase) {}
+  private readonly prisma = supabase
 
   @Get()
   async list(@Query('q') q?: string) {
